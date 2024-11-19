@@ -2,51 +2,109 @@
 const UserServices = require('../services/user.services.js');
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
+require('dotenv').config(); // Load environment variables
+
+
 
 
 exports.register = async (req, res, next) => {
     try {
         console.log("---req body---", req.body);
-        const { firstName, lastName, phoneNumber, email, password } = req.body;
+        const { firstName, lastName, phoneNumber, email, password, visaCard } = req.body;
 
-        const duplicate = await UserServices.getUserByEmail(email);
-        if (duplicate) {
+        // Check for duplicate email or phone number
+        const duplicateEmail = await UserServices.getUserByEmail(email);
+        if (duplicateEmail) {
             throw new Error(`User with email ${email} is already registered`);
         }
 
-        const response = await UserServices.registerUser(firstName, lastName, phoneNumber, email, password);
-        res.json({ status: true, success: 'User registered successfully' });
+        const duplicatePhoneNumber = await UserServices.getUserByPhoneNumber(phoneNumber);
+        if (duplicatePhoneNumber) {
+            throw new Error(`User with phone number ${phoneNumber} is already registered`);
+        }
+
+        // Hash the password using bcrypt
+        //const salt = await bcrypt.genSalt(10);
+        //const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Register the new user
+        const response = await UserServices.registerUser({
+            firstName,
+            lastName,
+            phoneNumber,
+            email,
+            password: password, // Store the hashed password
+            visaCard: visaCard || {}, // Optional field, default to an empty object if not provided
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        res.json({ status: true, success: 'User registered successfully', user: response });
     } catch (err) {
         console.log("---> err -->", err);
         next(err);
     }
 };
+
 exports.login = async (req, res, next) => {
     try {
         console.log('in login');
         const { email, password } = req.body;
+
+        // Validate input
         if (!email || !password) {
             return res.status(400).json({ status: false, message: 'Parameters are not correct' });
         }
+
+        // Check if user exists
         let user = await UserServices.checkUser(email);
         if (!user) {
             return res.status(404).json({ status: false, message: 'User with this email does not exist' });
         }
+
+        // Verify password
         const isPasswordCorrect = await user.comparePassword(password);
         if (!isPasswordCorrect) {
             return res.status(401).json({ status: false, message: 'Password does not match' });
         }
-        // Creating Token
+
+        // Ensure secret is set
+        /*
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            console.error('JWT secret is not set in the environment variables!');
+            return res.status(500).json({ status: false, message: 'Server configuration error' });
+        }*/
+
+        // Generate token
         const tokenData = { _id: user._id, email: user.email };
-        const token = await UserServices.generateAccessToken(tokenData, "secret", "1h");
-        console.log('after generating token for the user');
+        //const token = await UserServices.generateAccessToken(tokenData, 'secret', "1h");
+        const token = jwt.sign({ _id: user._id, email: user.email }, "secret", { expiresIn: '1h' });
+
+        console.log('after generating token for the user token:');
+        console.log(token);
+
         res.status(200).json({ status: true, success: "sendData", token: token });
     } catch (error) {
-        console.log(error, 'err---->');
+        console.error('Error during login:', error);
         next(error);
     }
+};
 
-}
+exports.validateToken = async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1]; // Extract token
+        //const jwtSecret = process.env.JWT_SECRET;
+        const decoded = jwt.verify(token, "secret");
+        console.log('in validating token when remmember me checked decoded:');
+        console.log(decoded);
+
+        res.status(200).json({ status: true, message: 'Token is valid' });
+    } catch (error) {
+        res.status(401).json({ status: false, message: 'Token is invalid or expired' });
+    }
+};
+
 
 // Add your transporter configuration
 const transporter = nodemailer.createTransport({
@@ -101,53 +159,31 @@ exports.forgotPassword = async (req, res, next) => {
 
 exports.resetPassword = async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1]; // Get the token from the header
         const { newPassword } = req.body;
-
-        console.log('Received token:', token); // Log the received token
-        if (!token) {
-            return res.status(400).json({ status: false, message: 'Token must be provided' });
-        }
-        // Verify the token
-        const decoded = jwt.verify(token, "secret"); // Use the appropriate secret here
-        const userId = decoded._id;
+        const userId = req.user._id; // Extracted from middleware
 
         // Call the service to reset the password
         await UserServices.resetUserPassword(userId, newPassword);
 
         res.status(200).json({ status: true, message: 'Password reset successfully.' });
     } catch (error) {
-        console.log(error, 'err---->');
+        console.log(error, 'Error resetting password');
         next(error);
     }
 };
+
 exports.getPersonalInfo = async (req, res, next) => {
     try {
-        // Extract token from Authorization header
-        const token = req.headers.authorization?.split(' ')[1]; 
-        if (!token) {
-            return res.status(401).json({ status: false, message: 'Token must be provided' });
-        }
-
-        // Verify the token
-        let decoded;
-        try {
-            decoded = jwt.verify(token, "secret");// Use an environment variable for the secret
-        } catch (error) {
-            return res.status(401).json({ status: false, message: 'Invalid token' });
-        }
-
-        const userId = decoded._id;
-
+        const userId = req.user._id; // Extracted from middleware
+        console.log('userId');
+        console.log(userId);
         // Fetch user information from the database
-        const user = await UserServices.getUserById(userId); // Ensure this function retrieves user data without password
+        const user = await UserServices.getUserById(userId);
 
         if (!user) {
             return res.status(404).json({ status: false, message: 'User not found' });
         }
-        console.log(`user to get info ${user}`);
 
-        // Construct response without sensitive info
         res.status(200).json({
             status: true,
             user: {
@@ -160,50 +196,22 @@ exports.getPersonalInfo = async (req, res, next) => {
         });
     } catch (error) {
         console.error('Error fetching personal info:', error);
-        next(error); // Pass the error to the error handler middleware
+        next(error);
     }
 };
 
 exports.updateUserPersonalInfo = async (req, res) => {
     try {
-        // Extract token from Authorization header
-        const token = req.headers.authorization?.split(' ')[1]; 
-        if (!token) {
-            return res.status(401).json({ status: false, message: 'Token must be provided' });
-        }
+        const userId = req.user._id; // Extracted from middleware
 
-        // Verify the token
-        let decoded;
-        try {
-            decoded = jwt.verify(token, "secret");// Use an environment variable for the secret
-        } catch (error) {
-            return res.status(401).json({ status: false, message: 'Invalid token' });
-        }
-
-        const userId = decoded._id;
-
-        // Create an object to hold the fields that need to be updated
         const updateData = {};
+        if (req.body.firstName) updateData.firstName = req.body.firstName;
+        if (req.body.lastName) updateData.lastName = req.body.lastName;
+        if (req.body.phoneNumber) updateData.phoneNumber = req.body.phoneNumber;
+        if (req.body.email) updateData.email = req.body.email;
 
-        // Check which fields are provided and add them to updateData
-        if (req.body.firstName) {
-            updateData.firstName = req.body.firstName;
-        }
-        if (req.body.lastName) {
-            updateData.lastName = req.body.lastName;
-        }
-        if (req.body.phoneNumber) {
-            updateData.phoneNumber = req.body.phoneNumber;
-        }
-        if (req.body.email) {
-            updateData.email = req.body.email;
-        }
-        // Add checks for other fields if necessary...
-
-        // Call the service to update the user information
         const updatedUser = await UserServices.updateUserInfo(userId, updateData);
 
-        // Respond with success
         res.status(200).json({
             message: 'User information updated successfully',
             user: updatedUser
@@ -213,8 +221,51 @@ exports.updateUserPersonalInfo = async (req, res) => {
         if (error.name === 'ValidationError') {
             return res.status(400).json({ message: 'Invalid data provided', errors: error.errors });
         }
-
-        // For any other errors, you can return a generic message
         return res.status(500).json({ message: 'An error occurred while updating user information' });
+    }
+};
+
+exports.addCreditCard = async (req, res, next) => {
+    try {
+        const userId = req.user._id; // Extract user ID from authenticated user
+        const { visaCard } = req.body; // Destructure visaCard from the request body
+        console.log('Received body:', req.body); // Log the incoming body
+
+        // Ensure all required fields in the visaCard object are provided
+        if (!visaCard || !visaCard.cardNumber || !visaCard.expiryMonth || !visaCard.expiryYear || !visaCard.cardCode || !visaCard.firstName || !visaCard.lastName) {
+            return res.status(400).json({ status: false, message: 'All card details must be provided' });
+        }
+
+        // Update the user's credit card details
+        const updatedUser = await UserServices.addCreditCard(userId, visaCard); // Pass the visaCard object directly
+        console.log('Credit card added successfully');
+        res.status(200).json({
+            status: true,
+            message: 'Credit card added successfully',
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Error adding credit card:', error);
+        next(error);
+    }
+};
+  
+  exports.getCreditCardData = async (req, res) => {
+    try {
+        // The user ID is extracted from the JWT token in middleware
+        const userId = req.user._id; // Assuming middleware sets `req.user`
+
+        // Fetch credit card data using the service
+        const creditCardData = await UserServices.getCreditCardData(userId);
+
+        if (!creditCardData || Object.keys(creditCardData).length === 0) {
+            return res.status(404).json({ message: 'No credit card information found.' });
+        }
+        console.log(`creditCard: ${creditCardData}`);
+
+        return res.status(200).json({ status: true, creditCard: creditCardData });
+    } catch (error) {
+        console.error('Error fetching credit card data:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 };

@@ -4,12 +4,18 @@
 //database using /register api and then get signIn using /login api
 const router = require("express").Router();
 const UserController = require('../controllers/user.controller');
+const authenticateToken = require('../middleware/authMiddleware');
 
 
 router.post("/register",UserController.register);
 router.post("/login", UserController.login);
+router.post("/validateToken", UserController.validateToken);
+
 router.post("/forgotPassword", UserController.forgotPassword);
-router.post("/resetPassword", UserController.resetPassword);
-router.get("/getPersonalInfo", UserController.getPersonalInfo); 
-router.post("/updateUserPersonalInfo", UserController.updateUserPersonalInfo);
+router.post("/resetPassword", authenticateToken, UserController.resetPassword);
+router.get("/getPersonalInfo", authenticateToken, UserController.getPersonalInfo); 
+router.post("/updateUserPersonalInfo", authenticateToken, UserController.updateUserPersonalInfo);
+router.post("/addCreditCard", authenticateToken, UserController.addCreditCard);
+router.get("/getCreditCardData", authenticateToken, UserController.getCreditCardData);
+
 module.exports = router;

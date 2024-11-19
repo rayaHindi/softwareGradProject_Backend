@@ -35,33 +35,39 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Password is required"],
     },
+    visaCard: {
+        cardNumber: { type: String, required: false },
+        expiryMonth: { type: String, required: false },
+        expiryYear: { type: String, required: false },
+        cardCode: { type: String, required: false },
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
+    }
 }, { timestamps: true });
 
-// used while encrypting user-entered password
-userSchema.pre("save", async function () {
+userSchema.pre("save",async function(){
     var user = this;
-    if (!user.isModified("password")) {
-        return;
+    if(!user.isModified("password")){
+        return
     }
-    try {
+    try{
         const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(user.password, salt);
+        const hash = await bcrypt.hash(user.password,salt);
         user.password = hash;
-    } catch (err) {
+    }catch(err){
         throw err;
     }
 });
-
-// used while sign-in decrypt
+//used while signIn decrypt
 userSchema.methods.comparePassword = async function (candidatePassword) {
     try {
+        console.log('----------------no password',this.password);
+        // @ts-ignore
         const isMatch = await bcrypt.compare(candidatePassword, this.password);
         return isMatch;
     } catch (error) {
         throw error;
     }
 };
-
-// creating a model "object that represents a collection with CRUD operation"
-const UserModel = db.model('user', userSchema);
+const UserModel = db.model('user',userSchema);
 module.exports = UserModel;
