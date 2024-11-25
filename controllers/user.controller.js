@@ -260,8 +260,8 @@ exports.addCreditCard = async (req, res, next) => {
 
         if (!creditCardData || Object.keys(creditCardData).length === 0) {
             return res.status(404).json({ message: 'No credit card information found.' });
+            console.log(`creditCard: ${creditCardData}`);
         }
-        console.log(`creditCard: ${creditCardData}`);
 
         return res.status(200).json({ status: true, creditCard: creditCardData });
     } catch (error) {
