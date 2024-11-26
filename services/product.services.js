@@ -79,34 +79,78 @@ class ProductServices {
     }
 
     // Update a product by ID
-    static async updateProductById(productId, updateData) {
-        try {
-            const updatedProduct = await ProductModel.findByIdAndUpdate(
-                productId,
-                updateData,
-                { new: true, runValidators: true }
-            );
-            if (!updatedProduct) {
-                throw new Error("Product not found");
+static async updateProductById(productId, updateData) {
+    try {
+        // Validate availableOptions format and set default values
+        if (updateData.availableOptions) {
+            for (const [key, values] of Object.entries(updateData.availableOptions)) {
+                if (!Array.isArray(values)) {
+                    throw new Error(
+                        `Invalid availableOptions format: '${key}' must have an array of values`
+                    );
+                }
+
+                // Ensure each option has an extraCost field, defaulting to 0
+                updateData.availableOptions[key] = values.map(option => {
+                    if (!option.name) {
+                        throw new Error(`Each option in '${key}' must have a valid name.`);
+                    }
+                    return {
+                        name: option.name.trim(),
+                        extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
+                    };
+                });
             }
-            return updatedProduct;
-        } catch (err) {
-            throw new Error("Error updating product: " + err.message);
         }
+
+        // Validate and set availableOptionStatus
+        if (updateData.availableOptionStatus) {
+            if (typeof updateData.availableOptionStatus !== "object") {
+                throw new Error(
+                    "Invalid availableOptionStatus format: Must be an object with boolean values."
+                );
+            }
+
+            for (const [key, value] of Object.entries(updateData.availableOptionStatus)) {
+                if (typeof value !== "boolean") {
+                    throw new Error(
+                        `Invalid value in availableOptionStatus: '${key}' must be true or false.`
+                    );
+                }
+            }
+        } else {
+            updateData.availableOptionStatus = {}; // Default to empty object if not provided
+        }
+
+        // Perform the update
+        const updatedProduct = await ProductModel.findByIdAndUpdate(
+            productId,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            throw new Error("Product not found");
+        }
+
+        return updatedProduct;
+    } catch (err) {
+        throw new Error("Error updating product: " + err.message);
     }
+}
 
     // Delete a product by ID
     static async deleteProductById(productId) {
         try {
-            const deletedProduct = await ProductModel.findByIdAndDelete(productId);
-            if (!deletedProduct) {
-                throw new Error("Product not found");
-            }
-            return deletedProduct;
+          // Log the ID to ensure it's being passed correctly
+          console.log("ProductService: Deleting product with ID:", productId);
+          
+          const deletedProduct = await ProductModel.findByIdAndDelete(productId);
+          return deletedProduct; // Returns the deleted product if it existed, otherwise null
         } catch (err) {
-            throw new Error("Error deleting product: " + err.message);
+          throw new Error("Error deleting product: " + err.message);
         }
-    }
+      }
 
     // Get all products by category
     static async getProductsByCategory(category) {

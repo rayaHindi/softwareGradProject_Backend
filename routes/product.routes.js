@@ -5,6 +5,8 @@ const ProductController = require('../controllers/product.controller.js');
 
 router.post("/addNewPastryProduct", ProductController.addNewProduct);
 router.get("/getAllProducts", ProductController.getAllProducts);
+router.put('/updateProductInfo', ProductController.updateProduct);
+router.delete('/deleteProduct/:productId', ProductController.deleteProduct);
 
 /*
 router.get('/products', productController.getAllProductsController);

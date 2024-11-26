@@ -31,3 +31,50 @@ exports.getAllProducts = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+exports.updateProduct = async (req, res) => {
+    try {
+        const productId = req.body._id; // Extract the product ID from the request body
+        const updateData = req.body;
+
+        // Log the product ID and update data for debugging purposes
+        console.log("Updating Product with ID:", productId);
+        console.log("Update Data:", updateData);
+
+        // Use ProductServices to update the product
+        const updatedProduct = await ProductServices.updateProductById(productId, updateData);
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        console.log("Product updated successfully:", updatedProduct);
+        res.status(200).json(updatedProduct);
+    } catch (error) {
+        console.error("Error updating product:", error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+exports.deleteProduct = async (req, res) => {
+    try {
+      const productId = req.params.productId;
+  
+      // Logging productId for debugging purposes
+      console.log("Deleting Product with ID:", productId);
+  
+      // Use the service to delete the product
+      const deletedProduct = await ProductServices.deleteProductById(productId);
+  
+      if (!deletedProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+  
+      console.log("Product deleted successfully:", deletedProduct);
+      res.status(200).json({ message: "Product deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting product:", error.message);
+      res.status(500).json({ message: error.message });
+    }
+  };
