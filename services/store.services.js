@@ -1,41 +1,28 @@
-const StoreService = require('../services/store.services');
+const StoreModel = require('../model/store.model');
 
-exports.register = async (req, res, next) => {
-    try {
-        const {
-            storeName,
-            contactEmail,
-            phoneNumber,
-            password,
-            accountType,
-            country,
-            city,
-            allowSpecialOrders,
-            selectedGenre
-        } = req.body;
+class StoreService {
+    static async registerStore({ storeName, contactEmail, phoneNumber, password, accountType = 'S', country, city, allowSpecialOrders, selectedGenre }) {
+        try {
+            // Create a new store with all the provided fields
+            const createStore = new StoreModel({
+                storeName,
+                contactEmail,
+                phoneNumber,
+                password,
+                accountType,
+                country,
+                city,
+                allowSpecialOrders,
+                selectedGenre
+            });
 
-        const successRes = await StoreService.registerStore({
-            storeName,
-            contactEmail,
-            phoneNumber,
-            password,
-            accountType,
-            country,
-            city,
-            allowSpecialOrders,
-            selectedGenre
-        });
-
-        res.status(201).json({
-            status: true,
-            message: "Store registered successfully",
-            data: successRes
-        });
-    } catch (err) {
-        res.status(500).json({
-            status: false,
-            message: "Error registering store",
-            error: err.message
-        });
+            // Save the new store to the database
+            return await createStore.save();
+        } catch (err) {
+            // Handle and propagate any errors
+            throw err;
+        }
     }
-};
+}
+
+module.exports = StoreService;
