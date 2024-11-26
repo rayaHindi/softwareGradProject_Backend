@@ -8,7 +8,7 @@ const storeRoutes = require('./routers/store.router');
 const app = express();
 
 app.use(body_parser.json());
-app.use('/user', userRouter);
+app.use('/', userRouter);
 app.use('/store', storeRoutes);
 
 module.exports = app;
