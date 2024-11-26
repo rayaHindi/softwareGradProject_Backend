@@ -1,21 +1,15 @@
 const mongoose = require('mongoose');
 const db = require('../config/db');
-const bcrypt = require('bcrypt');
 const { Schema } = mongoose;
 
-// Updated user schema
-const userSchema = new Schema({
-    firstName: {
+// Store schema
+const storeSchema = new Schema({
+    storeName: {
         type: String,
         required: true,
         trim: true // Removes extra whitespace
     },
-    lastName: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    email: {
+    contactEmail: {
         type: String,
         lowercase: true,
         required: true,
@@ -38,25 +32,41 @@ const userSchema = new Schema({
     },
     accountType: {
         type: String,
-        enum: ['U', 'A'], // Example: 'U' for User, 'A' for Admin
+        enum: ['S', 'A'], // Example: 'S' for Store, 'A' for Admin
         required: true,
-        //default: 'U'
     },
-    selectedGenres: {
-        type: [String], // Array of strings
-        default: [] // Default to empty array
+    country: {
+        type: String,
+        required: true
+    },
+    city: {
+        type: String,
+        required: true
+    },
+    allowSpecialOrders: {
+        type: Boolean,
+        default: false // Default to not allowing special orders
+    },
+    selectedGenre: {
+        type: String, // Single genre as a string
+        required: true // Make it required to ensure every store has a genre
+    },
+    dateCreated: {
+        type: Date,
+        default: Date.now // Automatically set the creation date
     }
 });
 
 // Pre-save middleware for hashing the password
-userSchema.pre('save', async function () {
+storeSchema.pre('save', async function () {
     try {
-        const user = this;
+        const store = this;
 
         // Only hash the password if it has been modified or is new
-        if (user.isModified('password')) {
+        if (store.isModified('password')) {
+            const bcrypt = require('bcrypt');
             const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
+            store.password = await bcrypt.hash(store.password, salt);
         }
     } catch (error) {
         throw error;
@@ -64,6 +74,6 @@ userSchema.pre('save', async function () {
 });
 
 // Compile model
-const UserModel = db.model('user', userSchema);
+const StoreModel = db.model('store', storeSchema);
 
-module.exports = UserModel;
+module.exports = StoreModel;
