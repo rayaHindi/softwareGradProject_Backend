@@ -35,6 +35,16 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Password is required"],
     },
+    accountType: {
+        type: String,
+        enum: ['U', 'A'], // Example: 'U' for User, 'A' for Admin
+        required: true,
+        //default: 'U'
+    },
+    selectedGenres: {
+        type: [String], // Array of strings
+        default: [] // Default to empty array
+    },
     visaCard: {
         cardNumber: { type: String, required: false },
         expiryMonth: { type: String, required: false },
