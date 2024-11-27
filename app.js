@@ -8,6 +8,6 @@ app.use(bodyParser.json())
 
 app.use("/product", productRoute);
 app.use("/", UserRoute);
-
+app.use('/store', storeRoutes);
 //app.use("/",ToDoRoute);
 module.exports = app;
