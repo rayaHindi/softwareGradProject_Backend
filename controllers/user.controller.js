@@ -13,7 +13,7 @@ exports.register = async (req, res, next) => {
         const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
         // Call the UserService to register the user with all fields
-        const successRes = await UserService.registerUser({
+        const successRes = await UserServices.registerUser({
             firstName,
             lastName,
             email,
@@ -115,17 +115,17 @@ exports.forgotPassword = async (req, res, next) => {
     try {
         const { email } = req.body; // Get email from request body
         const user = await UserServices.getUserByEmail(email);
-        console.log( `sending email to ${email}`);
+        console.log(`sending email to ${email}`);
 
 
         if (!user) {
-            console.log( `not user`);
+            console.log(`not user`);
             return res.status(404).json({ status: false, message: 'User not found' });
         }
         // Generate a temporary password
         const tempPassword = Math.random().toString(36).slice(-8); // Simple random password (8 characters)
         await UserServices.resetUserPassword(user._id, tempPassword)
-        console.log( `temp pass ${tempPassword}`);
+        console.log(`temp pass ${tempPassword}`);
 
         //await user.save(); // Save the updated user to the database
 
@@ -243,8 +243,8 @@ exports.addCreditCard = async (req, res, next) => {
         next(error);
     }
 };
-  
-  exports.getCreditCardData = async (req, res) => {
+
+exports.getCreditCardData = async (req, res) => {
     try {
         // The user ID is extracted from the JWT token in middleware
         const userId = req.user._id; // Assuming middleware sets `req.user`

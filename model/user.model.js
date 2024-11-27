@@ -18,7 +18,7 @@ const userSchema = new Schema({
     phoneNumber: {
         type: String,
         required: [true, "Phone number is required"],
-        match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
+        // match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
         unique: true
     },
     email: {
