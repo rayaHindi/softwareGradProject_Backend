@@ -1,13 +1,13 @@
-const app = require('./app');
-const db = require('./config/db');
-const UserModel = require('./model/user.model')
+// index.js
+const app = require('./app');  // Import the Express app
+const db = require('./config/db'); // Import database connection
+const PORT = 3000;
+//const UserModel = require('./model/user.model')
 
-const port = 3000;
-
-app.get('/', (req, res) => {
-    res.send("Hello World beeeessss")
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-app.listen(port, () => {
-    console.log(`server is listening on port http://localhost:${port} `);
-});
+// index.js -> app.js -> router -> controller -> service
+

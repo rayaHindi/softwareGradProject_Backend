@@ -1,40 +1,39 @@
-const mongoose = require('mongoose');
 const db = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Updated user schema
+// defining schema "user"
 const userSchema = new Schema({
     firstName: {
         type: String,
-        required: true,
-        trim: true // Removes extra whitespace
+        required: [true, "First name is required"],
+        trim: true
     },
     lastName: {
         type: String,
-        required: true,
+        required: [true, "Last name is required"],
         trim: true
+    },
+    phoneNumber: {
+        type: String,
+        required: [true, "Phone number is required"],
+        match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
+        unique: true
     },
     email: {
         type: String,
         lowercase: true,
-        required: true,
-        // unique: true
-    },
-    phoneNumber: {
-        type: String,
-        required: true,
-        // unique: true,
-        /*  validate: {
-              validator: function (v) {
-                  return /^\+?[1-9]\d{1,14}$/.test(v); // Validate international phone number format
-              },
-              message: props => `${props.value} is not a valid phone number!`
-          }*/
+        required: [true, "Email can't be empty"],
+        match: [
+            /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/,
+            "Email format is not correct",
+        ],
+        unique: true,
     },
     password: {
         type: String,
-        required: true
+        required: [true, "Password is required"],
     },
     accountType: {
         type: String,
@@ -45,25 +44,40 @@ const userSchema = new Schema({
     selectedGenres: {
         type: [String], // Array of strings
         default: [] // Default to empty array
+    },
+    visaCard: {
+        cardNumber: { type: String, required: false },
+        expiryMonth: { type: String, required: false },
+        expiryYear: { type: String, required: false },
+        cardCode: { type: String, required: false },
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
+    }
+}, { timestamps: true });
+
+userSchema.pre("save", async function () {
+    var user = this;
+    if (!user.isModified("password")) {
+        return
+    }
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(user.password, salt);
+        user.password = hash;
+    } catch (err) {
+        throw err;
     }
 });
-
-// Pre-save middleware for hashing the password
-userSchema.pre('save', async function () {
+//used while signIn decrypt
+userSchema.methods.comparePassword = async function (candidatePassword) {
     try {
-        const user = this;
-
-        // Only hash the password if it has been modified or is new
-        if (user.isModified('password')) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(user.password, salt);
-        }
+        console.log('----------------no password', this.password);
+        // @ts-ignore
+        const isMatch = await bcrypt.compare(candidatePassword, this.password);
+        return isMatch;
     } catch (error) {
         throw error;
     }
-});
-
-// Compile model
+};
 const UserModel = db.model('user', userSchema);
-
 module.exports = UserModel;
