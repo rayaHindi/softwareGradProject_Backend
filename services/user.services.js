@@ -4,15 +4,26 @@ const UserModel = require("../model/user.model");
 const jwt = require("jsonwebtoken");
 class UserServices{
  
-    static registerUser = async (userData) => {
+    static async registerUser({ firstName, lastName, email, phoneNumber, password, accountType = 'U', selectedGenres = [] }) {
         try {
-            const newUser = new User(userData);
-            await newUser.save();
-            return newUser;
+            // Create a new user with all the provided fields
+            const createUser = new UserModel({
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                password,
+                accountType,
+                selectedGenres
+            });
+
+            // Save the new user to the database
+            return await createUser.save();
         } catch (err) {
-            throw new Error('Error registering user: ' + err.message);
+            // Handle and propagate any errors
+            throw err;
         }
-    };
+    }
     static async getUserByEmail(email){
         try{
             return await UserModel.findOne({email});

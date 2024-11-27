@@ -1,55 +1,165 @@
-const db = require('../config/db');
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const ProductModel = require("../model/product.model");
 
-// defining schema "product"
-const productSchema = new Schema({
-    name: {
-        type: String,
-        required: [true, "Product name is required"],
-        trim: true
-    },
-    price: {
-        type: Number,
-        required: [true, "Price is required"],
-        min: [0, "Price must be a positive number"]
-    },
-    specialNote: {
-        type: String,
-        trim: true,
-        maxlength: 200 // Limiting note length to 200 characters
-    },
-    description: {
-        type: String,
-        required: [true, "Description is required"],
-        trim: true
-    },
-    quantity: {
-        type: Number,
-        required: [true, "Quantity is required"],
-        min: [0, "Quantity must be a positive number"]
-    },
-    availableOptions: {
-        type: [String], // Array of strings to support different options like colors, sizes
-        default: []
-    },
-    timeRequired: {
-        type: Number,
-        required: [true, "Production time is required"],
-        min: [1, "Time must be at least 1 unit"], // Represents time in minutes, hours, etc.
-        default: 1
-    },
-    // Optionally add categoryId and businessId fields in the future
-    // categoryId: {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'Category' // Refers to the Category model, if defined later
-    // },
-    // businessId: {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'Business' // Refers to the Business model, if defined later
-    // }
-}, { timestamps: true });
+class ProductServices {
+    // Add a new product
+    static async addProduct(productData) {
+        try {
+            // Validate availableOptions format and set default values
+            if (productData.availableOptions) {
+                for (const [key, values] of Object.entries(productData.availableOptions)) {
+                    if (!Array.isArray(values)) {
+                        throw new Error(
+                            `Invalid availableOptions format: '${key}' must have an array of values`
+                        );
+                    }
+    
+                    // Ensure each option has an extraCost field, defaulting to 0
+                    productData.availableOptions[key] = values.map(option => {
+                        if (!option.name) {
+                            throw new Error(`Each option in '${key}' must have a valid name.`);
+                        }
+                        return {
+                            name: option.name.trim(),
+                            extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
+                        };
+                    });
+                }
+            }
+    
+            // Validate and set availableOptionStatus
+            if (productData.availableOptionStatus) {
+                if (typeof productData.availableOptionStatus !== "object") {
+                    throw new Error(
+                        "Invalid availableOptionStatus format: Must be an object with boolean values."
+                    );
+                }
+    
+                for (const [key, value] of Object.entries(productData.availableOptionStatus)) {
+                    if (typeof value !== "boolean") {
+                        throw new Error(
+                            `Invalid value in availableOptionStatus: '${key}' must be true or false.`
+                        );
+                    }
+                }
+            } else {
+                productData.availableOptionStatus = {}; // Default to empty object
+            }
+    
+            // Create and save the new product
+            const newProduct = new ProductModel(productData);
+            await newProduct.save();
+            return newProduct;
+        } catch (err) {
+            throw new Error("Error adding product: " + err.message);
+        }
+    }
+    
+    
 
-// Creating the product model
-const ProductModel = db.model('Product', productSchema);
-module.exports = ProductModel;
+    // Get all products
+    static async getAllProducts() {
+        try {
+            return await ProductModel.find(); // Fetch all products from the database
+        } catch (err) {
+            throw new Error("Error fetching products: " + err.message);
+        }
+    }
+
+    // Get product by ID
+    static async getProductById(productId) {
+        try {
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new Error("Product not found");
+            }
+            return product;
+        } catch (err) {
+            throw new Error("Error fetching product: " + err.message);
+        }
+    }
+
+    // Update a product by ID
+static async updateProductById(productId, updateData) {
+    try {
+        // Validate availableOptions format and set default values
+        if (updateData.availableOptions) {
+            for (const [key, values] of Object.entries(updateData.availableOptions)) {
+                if (!Array.isArray(values)) {
+                    throw new Error(
+                        `Invalid availableOptions format: '${key}' must have an array of values`
+                    );
+                }
+
+                // Ensure each option has an extraCost field, defaulting to 0
+                updateData.availableOptions[key] = values.map(option => {
+                    if (!option.name) {
+                        throw new Error(`Each option in '${key}' must have a valid name.`);
+                    }
+                    return {
+                        name: option.name.trim(),
+                        extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
+                    };
+                });
+            }
+        }
+
+        // Validate and set availableOptionStatus
+        if (updateData.availableOptionStatus) {
+            if (typeof updateData.availableOptionStatus !== "object") {
+                throw new Error(
+                    "Invalid availableOptionStatus format: Must be an object with boolean values."
+                );
+            }
+
+            for (const [key, value] of Object.entries(updateData.availableOptionStatus)) {
+                if (typeof value !== "boolean") {
+                    throw new Error(
+                        `Invalid value in availableOptionStatus: '${key}' must be true or false.`
+                    );
+                }
+            }
+        } else {
+            updateData.availableOptionStatus = {}; // Default to empty object if not provided
+        }
+
+        // Perform the update
+        const updatedProduct = await ProductModel.findByIdAndUpdate(
+            productId,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            throw new Error("Product not found");
+        }
+
+        return updatedProduct;
+    } catch (err) {
+        throw new Error("Error updating product: " + err.message);
+    }
+}
+
+    // Delete a product by ID
+    static async deleteProductById(productId) {
+        try {
+          // Log the ID to ensure it's being passed correctly
+          console.log("ProductService: Deleting product with ID:", productId);
+          
+          const deletedProduct = await ProductModel.findByIdAndDelete(productId);
+          return deletedProduct; // Returns the deleted product if it existed, otherwise null
+        } catch (err) {
+          throw new Error("Error deleting product: " + err.message);
+        }
+      }
+
+    // Get all products by category
+    static async getProductsByCategory(category) {
+        try {
+            return await ProductModel.find({ category });
+        } catch (err) {
+            throw new Error("Error fetching products by category: " + err.message);
+        }
+    }
+}
+
+module.exports = ProductServices;
