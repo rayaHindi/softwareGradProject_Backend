@@ -2,8 +2,8 @@
 //In services, all the database operation happens like fetching, Insertion, Deletion.
 const UserModel = require("../model/user.model");
 const jwt = require("jsonwebtoken");
-class UserServices{
- 
+class UserServices {
+
     static async registerUser({ firstName, lastName, email, phoneNumber, password, accountType = 'U', selectedGenres = [] }) {
         try {
             // Create a new user with all the provided fields
@@ -24,10 +24,10 @@ class UserServices{
             throw err;
         }
     }
-    static async getUserByEmail(email){
-        try{
-            return await UserModel.findOne({email});
-        }catch(err){
+    static async getUserByEmail(email) {
+        try {
+            return await UserModel.findOne({ email });
+        } catch (err) {
             console.log(err);
         }
     }
@@ -38,14 +38,14 @@ class UserServices{
             throw err;
         }
     }
-    static async checkUser(email){
+    static async checkUser(email) {
         try {
-            return await UserModel.findOne({email});
+            return await UserModel.findOne({ email });
         } catch (error) {
             throw error;
         }
     }
-    static async generateAccessToken(tokenData,JWTSecret_Key,JWT_EXPIRE){
+    static async generateAccessToken(tokenData, JWTSecret_Key, JWT_EXPIRE) {
         return jwt.sign(tokenData, JWTSecret_Key, { expiresIn: JWT_EXPIRE });
     }
 
@@ -87,13 +87,13 @@ class UserServices{
             if (!user) {
                 throw new Error('User not found');
             }
-    
+
             // Add or update the card details
             user.visaCard = cardDetails;
-    
+
             // Save the updated user object
             await user.save();
-    
+
             return user; // Return the updated user
         } catch (error) {
             throw error; // Rethrow the error to be handled in the controller
@@ -103,24 +103,24 @@ class UserServices{
         try {
             // Find the user by ID and retrieve only the visaCard field
             const user = await UserModel.findById(userId).select('visaCard');
-            
+
             if (!user) {
                 throw new Error('User not found');
             }
-    
+
             // Check if visaCard is null or undefined
             if (!user.visaCard) {
                 return null; // Return null explicitly if no credit card data
             }
-    
+
             // Return the credit card details
             return user.visaCard;
         } catch (error) {
             throw new Error('Error fetching credit card data: ' + error.message);
         }
     }
-    
-    
+
+
 }
 
 module.exports = UserServices;

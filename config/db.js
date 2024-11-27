@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
-const connection = mongoose.createConnection(`mongodb://localhost:27017/newDB`).on('open',()=>{
-  console.log("MongoDB Connected");}).on('error',()=>{
-    console.log("MongoDB Connection error");
+const connection = mongoose.createConnection('mongodb://localhost:27017/CraftBlend').on('open', () => {
+    console.log('Mongo connected');
+}).on('error', () => {
+    console.log('error connecting');
 });
 
 module.exports = connection;
