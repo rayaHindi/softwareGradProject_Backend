@@ -9,40 +9,34 @@ require('dotenv').config(); // Load environment variables
 
 exports.register = async (req, res, next) => {
     try {
-        console.log("---req body---", req.body);
-        const { firstName, lastName, phoneNumber, email, password, visaCard } = req.body;
+        // Destructure all required fields from the request body
+        const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
-        // Check for duplicate email or phone number
-        const duplicateEmail = await UserServices.getUserByEmail(email);
-        if (duplicateEmail) {
-            throw new Error(`User with email ${email} is already registered`);
-        }
-
-        const duplicatePhoneNumber = await UserServices.getUserByPhoneNumber(phoneNumber);
-        if (duplicatePhoneNumber) {
-            throw new Error(`User with phone number ${phoneNumber} is already registered`);
-        }
-
-        // Hash the password using bcrypt
-        //const salt = await bcrypt.genSalt(10);
-        //const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Register the new user
-        const response = await UserServices.registerUser({
+        // Call the UserService to register the user with all fields
+        const successRes = await UserService.registerUser({
             firstName,
             lastName,
-            phoneNumber,
             email,
-            password: password, // Store the hashed password
-            visaCard: visaCard || {}, // Optional field, default to an empty object if not provided
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            phoneNumber,
+            password,
+            accountType,
+            selectedGenres
         });
 
-        res.json({ status: true, success: 'User registered successfully', user: response });
+        // Respond with a success message
+        res.status(201).json({
+            status: true,
+            message: "Registered successfully",
+            data: successRes
+        });
     } catch (err) {
-        console.log("---> err -->", err);
-        next(err);
+        // Catch and handle errors, returning a meaningful error response
+        console.error(err);
+        res.status(500).json({
+            status: false,
+            message: "Error registering user",
+            error: err.message
+        });
     }
 };
 
