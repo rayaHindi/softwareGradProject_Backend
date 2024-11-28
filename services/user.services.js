@@ -2,6 +2,8 @@
 //In services, all the database operation happens like fetching, Insertion, Deletion.
 const UserModel = require("../model/user.model");
 const jwt = require("jsonwebtoken");
+const bcrypt = require('bcrypt');
+
 class UserServices {
 
     static async registerUser({ firstName, lastName, email, phoneNumber, password, accountType = 'U', selectedGenres = [] }) {
@@ -47,21 +49,53 @@ class UserServices {
     }
     static async generateAccessToken(tokenData, JWTSecret_Key, JWT_EXPIRE) {
         return jwt.sign(tokenData, JWTSecret_Key, { expiresIn: JWT_EXPIRE });
-    }
+    }//
 
     static async resetUserPassword(userId, newPassword) {
         try {
+            // Find the user by ID
             const user = await UserModel.findById(userId);
             if (!user) {
                 throw new Error('User not found');
             }
+            // Update the user's password
             user.password = newPassword; // This will trigger the pre-save hook to hash the password
             await user.save();
+    
             return user;
         } catch (error) {
             throw error;
         }
     }
+    
+
+    static async resetUserPasswordWithOldPass(userId, oldPassword, newPassword) {
+        try {
+            // Find the user by ID
+            const user = await UserModel.findById(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+    
+            // Verify that the old password matches the hashed password in the database
+            const isMatch = await bcrypt.compare(oldPassword, user.password);
+            if (!isMatch) {
+                throw new Error('Old password is incorrect');
+            }
+    
+            // Hash the new password before saving it
+           // const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+            // Update the user's password
+            user.password = newPassword; // This will trigger the pre-save hook to hash the password
+            await user.save();
+    
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+    
     static async updateUserInfo(userId, updateData) {
         try {
             // Find the user by ID and update only the fields in updateData

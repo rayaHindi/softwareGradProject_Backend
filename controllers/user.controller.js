@@ -13,7 +13,7 @@ exports.register = async (req, res, next) => {
         const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
         // Call the UserService to register the user with all fields
-        const successRes = await UserService.registerUser({
+        const successRes = await UserServices.registerUser({
             firstName,
             lastName,
             email,
@@ -123,7 +123,7 @@ exports.forgotPassword = async (req, res, next) => {
             return res.status(404).json({ status: false, message: 'User not found' });
         }
         // Generate a temporary password
-        const tempPassword = Math.random().toString(36).slice(-8); // Simple random password (8 characters)
+        const tempPassword = '5555';//Math.random().toString(36).slice(-8); // Simple random password (8 characters)
         await UserServices.resetUserPassword(user._id, tempPassword)
         console.log( `temp pass ${tempPassword}`);
 
@@ -151,18 +151,19 @@ exports.forgotPassword = async (req, res, next) => {
     }
 };
 
+
 exports.resetPassword = async (req, res, next) => {
     try {
-        const { newPassword } = req.body;
-        const userId = req.user._id; // Extracted from middleware
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user._id; // Extracted from middleware (assuming the user is authenticated)
 
         // Call the service to reset the password
-        await UserServices.resetUserPassword(userId, newPassword);
+        await UserServices.resetUserPasswordWithOldPass(userId, oldPassword, newPassword);
 
         res.status(200).json({ status: true, message: 'Password reset successfully.' });
     } catch (error) {
-        console.log(error, 'Error resetting password');
-        next(error);
+        console.error('Error resetting password:', error);
+        res.status(400).json({ status: false, message: error.message });
     }
 };
 
