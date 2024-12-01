@@ -60,7 +60,15 @@ const storeSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'specialOrder',
         default: [],
-    }]
+    }],
+    visaCard: {
+        cardNumber: { type: String, required: false },
+        expiryMonth: { type: String, required: false },
+        expiryYear: { type: String, required: false },
+        cardCode: { type: String, required: false },
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
+    }
 });
 
 // Pre-save middleware for hashing the password

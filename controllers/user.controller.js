@@ -8,14 +8,13 @@ require('dotenv').config(); // Load environment variables
 
 
 
-
 exports.register = async (req, res, next) => {
     try {
         // Destructure all required fields from the request body
         const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
         // Call the UserService to register the user with all fields
-        const successRes = await UserServices.registerUser({
+        const newUser = await UserServices.registerUser({
             firstName,
             lastName,
             email,
@@ -25,11 +24,22 @@ exports.register = async (req, res, next) => {
             selectedGenres
         });
 
-        // Respond with a success message
+        // If there's an error during registration
+        if (!newUser) {
+            return res.status(400).json({ status: false, message: "User registration failed" });
+        }
+
+        // Generate token
+        const tokenData = { _id: newUser._id, email: newUser.email, userType: 'user' };
+        const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
+
+        // Respond with success message, token, and user data
         res.status(201).json({
             status: true,
             message: "Registered successfully",
-            data: successRes
+            token: token,
+            userType: 'user',
+            data: newUser,
         });
     } catch (err) {
         // Catch and handle errors, returning a meaningful error response
@@ -41,6 +51,7 @@ exports.register = async (req, res, next) => {
         });
     }
 };
+
 exports.login = async (req, res, next) => {
     try {
         console.log('in login');
@@ -84,6 +95,9 @@ exports.login = async (req, res, next) => {
 
         console.log('after generating token for the user token:');
         console.log(token);
+
+        console.log('User Type:');
+        console.log(userType);
 
         // Return user type along with the token
         res.status(200).json({ status: true, success: "sendData", token: token, userType: userType });

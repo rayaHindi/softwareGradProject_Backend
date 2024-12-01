@@ -1,9 +1,11 @@
 const ProductModel = require("../model/product.model");
 const StoreModel = require("../model/store.model");
+const mongoose = require('mongoose');
+
 
 class ProductServices {
     // Adda a new product
-    static async addProduct(productData) {
+    static async addProduct(productData, storeId) {
         try {
             // Validate availableOptions format and set default values
             if (productData.availableOptions) {
@@ -47,7 +49,6 @@ class ProductServices {
             }
     
             // Validate storeId
-            const storeId = productData.storeId;
             if (!mongoose.Types.ObjectId.isValid(storeId)) {
                 throw new Error('Invalid store ID');
             }
@@ -57,9 +58,12 @@ class ProductServices {
             if (!store) {
                 throw new Error('Store not found');
             }
-    
-            // Create and save the new product
-            const newProduct = new ProductModel(productData);
+            productData.category = store.category;
+            // Create and save the new product with an explicit reference to the store
+            const newProduct = new ProductModel({
+                ...productData,
+                store: storeId // Explicitly set the store reference in the product
+            });
             await newProduct.save();
     
             // Add the new product to the store's list of products
@@ -72,6 +76,66 @@ class ProductServices {
         }
     }
     
+     // Update a product by ID
+static async updateProductById(productId, updateData) {
+    try {
+        // Validate availableOptions format and set default values
+        if (updateData.availableOptions) {
+            for (const [key, values] of Object.entries(updateData.availableOptions)) {
+                if (!Array.isArray(values)) {
+                    throw new Error(
+                        `Invalid availableOptions format: '${key}'`
+                    );
+                }
+
+                // Ensure each option has an extraCost field, defaulting to 0
+                updateData.availableOptions[key] = values.map(option => {
+                    if (!option.name) {
+                        throw new Error(`Each option in '${key}' must have a valid name.`);
+                    }
+                    return {
+                        name: option.name.trim(),
+                        extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
+                    };
+                });
+            }
+        }
+
+        // Validate and set availableOptionStatus
+        if (updateData.availableOptionStatus) {
+            if (typeof updateData.availableOptionStatus !== "object") {
+                throw new Error(
+                    "Invalid availableOptionStatus format: Must be an object with boolean values."
+                );
+            }
+
+            for (const [key, value] of Object.entries(updateData.availableOptionStatus)) {
+                if (typeof value !== "boolean") {
+                    throw new Error(
+                        `Invalid value in availableOptionStatus: '${key}' must be true or false.`
+                    );
+                }
+            }
+        } else {
+            updateData.availableOptionStatus = {}; // Default to empty object if not provided
+        }
+
+        // Perform the update
+        const updatedProduct = await ProductModel.findByIdAndUpdate(
+            productId,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            throw new Error("Product not found");
+        }
+
+        return updatedProduct;
+    } catch (err) {
+        throw new Error("Error updating product: " + err.message);
+    }
+}
 
     // Delete a product by ID
     static async deleteProductById(productId) {
@@ -85,7 +149,24 @@ class ProductServices {
           throw new Error("Error deleting product: " + err.message);
         }
       }
-
+    
+    // Remove product reference from store
+static async removeProductFromStore(storeId, productId) {
+    try {
+      const store = await StoreModel.findById(storeId);
+      if (!store) {
+        throw new Error("Store not found");
+      }
+      // Remove the product ID from the store's products list
+      store.products = store.products.filter(
+        (id) => id.toString() !== productId.toString()
+      );
+      await store.save();
+    } catch (err) {
+      throw new Error("Error updating store: " + err.message);
+    }
+}
+  
     // Get all products by category
     static async getProductsByCategory(category) {
         try {
@@ -97,19 +178,36 @@ class ProductServices {
 
     static async getProductsByStoreId(storeId) {
         try {
-            // Find the store by the given storeId
-            const store = await StoreModel.findById(storeId).populate('products');
-
-            if (!store) {
-                throw new Error("Store not found");
-            }
-
-            // Return the products array from the store
-            return store.products;
+            // Query the products by `store` field that references the store ID
+            return await ProductModel.find({ store: storeId });
         } catch (err) {
+            console.log("Error fetching products by store ID: " + err.message);
             throw new Error("Error fetching products by store ID: " + err.message);
         }
     }
+
+    // Get product by ID
+    static async getProductById(productId) {
+        try {
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new Error("Product not found");
+            }
+            return product;
+        } catch (err) {
+            throw new Error("Error fetching product: " + err.message);
+        }
+    }
+
+     // Get all products
+     static async getAllProducts() {
+        try {
+            return await ProductModel.find(); // Fetch all products from the database
+        } catch (err) {
+            throw new Error("Error fetching products: " + err.message);
+        }
+    }
+
 }
 
 

@@ -3,11 +3,15 @@ const mongoose = require('mongoose');
 
 exports.addNewProduct = async (req, res) => {
     try {
+        // Extract storeId from the authenticated user (from the middleware)
+        const storeId = req.user._id;
+        console.log("storeID:", storeId);
+
         // Log the request body for debugging
         console.log("Request Body:", req.body);
 
-        // Use the ProductServices to add a product
-        const product = await ProductServices.addProduct(req.body);
+        // Use the ProductServices to add a product with the storeId passed separately
+        const product = await ProductServices.addProduct(req.body, storeId);
 
         console.log("Product added successfully:", product);
         res.status(201).json(product);
@@ -16,6 +20,7 @@ exports.addNewProduct = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 
 exports.getAllProducts = async (req, res) => {
@@ -33,14 +38,23 @@ exports.getAllProducts = async (req, res) => {
     }
 };
 
+
+
+
 exports.updateProduct = async (req, res) => {
     try {
+        const storeId = req.user._id; // Extract store ID from the token payload
         const productId = req.body._id; // Extract the product ID from the request body
         const updateData = req.body;
 
-        // Log the product ID and update data for debugging purposes
         console.log("Updating Product with ID:", productId);
         console.log("Update Data:", updateData);
+
+        // Check if the product belongs to the authenticated store
+        const product = await ProductServices.getProductById(productId);
+        if (!product || product.store.toString() !== storeId.toString()) {
+            return res.status(403).json({ message: "Unauthorized to update this product" });
+        }
 
         // Use ProductServices to update the product
         const updatedProduct = await ProductServices.updateProductById(productId, updateData);
@@ -57,13 +71,18 @@ exports.updateProduct = async (req, res) => {
     }
 };
 
-
 exports.deleteProduct = async (req, res) => {
     try {
+      const storeId = req.user._id; // Extract store ID from the token payload
       const productId = req.params.productId;
   
-      // Logging productId for debugging purposes
       console.log("Deleting Product with ID:", productId);
+  
+      // Use the service to get the product and verify if it belongs to the store
+      const product = await ProductServices.getProductById(productId);
+      if (!product || product.store.toString() !== storeId.toString()) {
+        return res.status(403).json({ message: "Unauthorized to delete this product" });
+      }
   
       // Use the service to delete the product
       const deletedProduct = await ProductServices.deleteProductById(productId);
@@ -72,6 +91,9 @@ exports.deleteProduct = async (req, res) => {
         return res.status(404).json({ message: "Product not found" });
       }
   
+      // Remove the product reference from the store's products list
+      await ProductServices.removeProductFromStore(storeId, productId);
+  
       console.log("Product deleted successfully:", deletedProduct);
       res.status(200).json({ message: "Product deleted successfully" });
     } catch (error) {
@@ -79,10 +101,11 @@ exports.deleteProduct = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
-
   exports.getProductsByStoreId = async (req, res) => {
     try {
-        const { storeId } = req.query;
+        console.log('in getProductsByStoreId');
+       // const { storeId } = req.query;
+       const storeId = req.user._id;
         console.log('storeId: ');
         console.log(storeId);
         // Validate storeId
@@ -92,7 +115,8 @@ exports.deleteProduct = async (req, res) => {
 
         // Call the service method to fetch products by store ID
         const products = await ProductServices.getProductsByStoreId(storeId);
-
+        console.log("Products fetched successfully: ");
+        console.log(products);
         res.status(200).json({
             status: true,
             message: 'Products fetched successfully',
