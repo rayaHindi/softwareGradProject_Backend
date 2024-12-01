@@ -19,7 +19,7 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Phone number is required"],
         //match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
-        unique: true
+        //unique: true
     },
     email: {
         type: String,
@@ -39,7 +39,7 @@ const userSchema = new Schema({
         type: String,
         enum: ['U', 'A'], // Example: 'U' for User, 'A' for Admin
         required: true,
-        //default: 'U'
+        default: 'U'
     },
     selectedGenres: {
         type: [String], // Array of strings

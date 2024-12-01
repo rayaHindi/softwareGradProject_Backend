@@ -1,8 +1,7 @@
+const mongoose = require('mongoose'); // Import mongoose
 const StoreService = require('../services/store.services');
-
 exports.register = async (req, res, next) => {
     try {
-        // Destructure all required fields from the request body
         const {
             storeName,
             contactEmail,
@@ -12,10 +11,14 @@ exports.register = async (req, res, next) => {
             country,
             city,
             allowSpecialOrders,
-            selectedGenre
+            selectedGenreId // This is the category ID
         } = req.body;
 
-        // Call the StoreService to register the store with all fields
+        if (!mongoose.Types.ObjectId.isValid(selectedGenreId)) {
+            return res.status(400).json({ status: false, message: "Invalid category ID" });
+        }
+
+        // Call StoreService to register the store
         const successRes = await StoreService.registerStore({
             storeName,
             contactEmail,
@@ -25,22 +28,28 @@ exports.register = async (req, res, next) => {
             country,
             city,
             allowSpecialOrders,
-            selectedGenre
+            selectedGenreId
         });
 
-        // Respond with a success message
+        if (successRes.error) {
+            return res.status(400).json({
+                status: false,
+                message: successRes.error,
+            });
+        }
+
         res.status(201).json({
             status: true,
             message: "Store registered successfully",
             data: successRes
         });
     } catch (err) {
-        // Catch and handle errors, returning a meaningful error response
         console.error(err);
         res.status(500).json({
             status: false,
-            message: "Error registering store",
+            message: err.message,
             error: err.message
         });
     }
 };
+

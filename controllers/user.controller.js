@@ -1,5 +1,7 @@
 //user.controller.js
 const UserServices = require('../services/user.services.js');
+const StoreServices = require('../services/store.services.js');
+
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 require('dotenv').config(); // Load environment variables
@@ -39,7 +41,6 @@ exports.register = async (req, res, next) => {
         });
     }
 };
-
 exports.login = async (req, res, next) => {
     try {
         console.log('in login');
@@ -50,10 +51,25 @@ exports.login = async (req, res, next) => {
             return res.status(400).json({ status: false, message: 'Parameters are not correct' });
         }
 
-        // Check if user exists
         let user = await UserServices.checkUser(email);
-        if (!user) {
-            return res.status(404).json({ status: false, message: 'User with this email does not exist' });
+        let userType;
+
+        // Check if user exists in the User model
+        if (user) {
+            // If the user is an admin, set userType as 'admin'
+            if (user.accountType === 'A') {
+                userType = 'admin';
+            } else {
+                userType = 'user';
+            }
+        } else {
+            // Check if store owner exists in the Store model
+            user = await StoreServices.checkStoreByEmail(email);
+            if (!user) {
+                return res.status(404).json({ status: false, message: 'User with this email does not exist' });
+            }
+
+            userType = 'store';
         }
 
         // Verify password
@@ -62,28 +78,21 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({ status: false, message: 'Password does not match' });
         }
 
-        // Ensure secret is set
-        /*
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            console.error('JWT secret is not set in the environment variables!');
-            return res.status(500).json({ status: false, message: 'Server configuration error' });
-        }*/
-
         // Generate token
-        const tokenData = { _id: user._id, email: user.email };
-        //const token = await UserServices.generateAccessToken(tokenData, 'secret', "1h");
-        const token = jwt.sign({ _id: user._id, email: user.email }, "secret", { expiresIn: '1h' });
+        const tokenData = { _id: user._id, email: user.email, userType };
+        const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
 
         console.log('after generating token for the user token:');
         console.log(token);
 
-        res.status(200).json({ status: true, success: "sendData", token: token });
+        // Return user type along with the token
+        res.status(200).json({ status: true, success: "sendData", token: token, userType: userType });
     } catch (error) {
         console.error('Error during login:', error);
         next(error);
     }
 };
+
 
 exports.validateToken = async (req, res) => {
     try {

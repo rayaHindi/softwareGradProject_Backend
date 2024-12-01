@@ -1,4 +1,5 @@
 const ProductServices = require('../services/product.services.js');
+const mongoose = require('mongoose');
 
 exports.addNewProduct = async (req, res) => {
     try {
@@ -78,3 +79,31 @@ exports.deleteProduct = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  exports.getProductsByStoreId = async (req, res) => {
+    try {
+        const { storeId } = req.query;
+        console.log('storeId: ');
+        console.log(storeId);
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: 'Invalid store ID' });
+        }
+
+        // Call the service method to fetch products by store ID
+        const products = await ProductServices.getProductsByStoreId(storeId);
+
+        res.status(200).json({
+            status: true,
+            message: 'Products fetched successfully',
+            data: products,
+        });
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to fetch products',
+            error: err.message,
+        });
+    }
+};

@@ -61,6 +61,6 @@ productSchema.pre("save", function (next) {
 });
 
 
-const ProductModel = db.model('Product', productSchema);
+const ProductModel = db.model('product', productSchema);
 module.exports = ProductModel;
 
