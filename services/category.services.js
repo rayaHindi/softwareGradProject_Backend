@@ -1,54 +1,104 @@
-// category.service.js
+// category.services.js
 const CategoryModel = require('../model/category.model');
 
-// Service to add a new category
-exports.addCategory = async ({ name, description }) => {
-    try {
-        // Create a new category instance
-        const newCategory = new CategoryModel({
-            name,
-            description,
-        });
-
-        // Save the category to the database
-        await newCategory.save();
-        return newCategory;
-    } catch (error) {
-        console.error('Error in category service:', error);
-        throw new Error('Unable to add category');
+class CategoryServices {
+    // Add a new category
+    static async addCategory({ name, description }) {
+        try {
+            const newCategory = new CategoryModel({
+                name,
+                description,
+            });
+            await newCategory.save();
+            return newCategory;
+        } catch (error) {
+            console.error('Error in category service:', error);
+            throw new Error('Unable to add category');
+        }
     }
-};
 
-// Service to check if a category has stores
-exports.hasStores = async (id) => {
-    try {
-        const category = await CategoryModel.findById(id).populate('stores');
-        return category && category.stores && category.stores.length > 0;
-    } catch (error) {
-        console.error('Error in category service:', error);
-        throw new Error('Unable to check if category has stores');
+    // Check if a category has stores
+    static async hasStores(id) {
+        try {
+            const category = await CategoryModel.findById(id).populate('stores');
+            return category && category.stores && category.stores.length > 0;
+        } catch (error) {
+            console.error('Error in category service:', error);
+            throw new Error('Unable to check if category has stores');
+        }
     }
-};
 
-// Service to delete a category
-exports.deleteCategory = async (id) => {
-    try {
-        // Find the category by ID and delete it
-        await CategoryModel.findByIdAndDelete(id);
-    } catch (error) {
-        console.error('Error in category service:', error);
-        throw new Error('Unable to delete category');
+    // Delete a category
+    static async deleteCategory(id) {
+        try {
+            await CategoryModel.findByIdAndDelete(id);
+        } catch (error) {
+            console.error('Error in category service:', error);
+            throw new Error('Unable to delete category');
+        }
     }
-};
 
-// Service to get all categories
-exports.getAllCategories = async () => {
-    try {
-        // Find all categories
-        const categories = await CategoryModel.find();
-        return categories;
-    } catch (error) {
-        console.error('Error in category service:', error);
-        throw new Error('Unable to fetch categories');
+    // Get all categories
+    static async getAllCategories() {
+        try {
+            const categories = await CategoryModel.find();
+            return categories;
+        } catch (error) {
+            console.error('Error in category service:', error);
+            throw new Error('Unable to fetch categories');
+        }
     }
-};
+
+    // Fetch categories with stores
+    static async fetchCategoriesWithStores() {
+        try {
+            const categories = await CategoryModel.find().populate('stores');
+            const result = {};
+
+            categories.forEach(category => {
+                result[category.name] = category.stores.map(store => ({
+                    storeName: store.storeName,
+                    contactEmail: store.contactEmail,
+                    phoneNumber: store.phoneNumber,
+                }));
+            });
+
+            return result;
+        } catch (error) {
+            throw new Error('Error fetching categories with stores: ' + error.message);
+        }
+    }
+
+    // Add store reference to category
+    static async addStoreToCategory(categoryId, storeId) {
+        try {
+            await CategoryModel.findByIdAndUpdate(
+                categoryId,
+                { $push: { stores: storeId } },
+                { new: true }
+            );
+        } catch (error) {
+            console.error('Error adding store to category:', error);
+            throw new Error('Unable to add store to category');
+        }
+    }
+    static async getStoresByCategory(categoryId) {
+        try {
+            const category = await CategoryModel.findById(categoryId).populate('stores');
+            if (!category) {
+                throw new Error('Category not found');
+            }
+            return category.stores.map(store => ({
+                _id: store._id,
+                storeName: store.storeName,
+                contactEmail: store.contactEmail,
+                phoneNumber: store.phoneNumber,
+            }));
+        } catch (error) {
+            console.error('Error fetching stores by category:', error);
+            throw new Error('Unable to fetch stores by category');
+        }
+    }
+}
+
+module.exports = CategoryServices;

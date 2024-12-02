@@ -7,7 +7,6 @@ const nodemailer = require('nodemailer');
 require('dotenv').config(); // Load environment variables
 
 
-
 exports.register = async (req, res, next) => {
     try {
         // Destructure all required fields from the request body
@@ -24,11 +23,6 @@ exports.register = async (req, res, next) => {
             selectedGenres
         });
 
-        // If there's an error during registration
-        if (!newUser) {
-            return res.status(400).json({ status: false, message: "User registration failed" });
-        }
-
         // Generate token
         const tokenData = { _id: newUser._id, email: newUser.email, userType: 'user' };
         const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
@@ -42,7 +36,15 @@ exports.register = async (req, res, next) => {
             data: newUser,
         });
     } catch (err) {
-        // Catch and handle errors, returning a meaningful error response
+        // Catch duplicate email error (MongoServerError code 11000 indicates duplicate key error)
+        if (err.name === 'MongoServerError' && err.code === 11000) {
+            return res.status(400).json({
+                status: false,
+                message: "User with this email already exists"
+            });
+        }
+        
+        // Catch and handle other errors, returning a meaningful error response
         console.error(err);
         res.status(500).json({
             status: false,

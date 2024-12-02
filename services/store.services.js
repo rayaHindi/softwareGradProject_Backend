@@ -39,6 +39,17 @@ class StoreService {
             throw err;
         }
     }
+    static async getStoreDetails(storeId) {
+        try {
+            const store = await StoreModel.findById(storeId);
+            if (!store) {
+                throw new Error('Store not found');
+            }
+            return store;
+        } catch (error) {
+            throw new Error('Error fetching store details: ' + error.message);
+        }
+    }
 }
 
 module.exports = StoreService;

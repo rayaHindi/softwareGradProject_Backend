@@ -11,5 +11,10 @@ router.delete('/delete/:id', categoryController.deleteCategory);
 
 // Route to get all categories
 router.get('/all', categoryController.getAllCategories);
+
+router.get('/categories-and-stores', categoryController.getCategoriesAndStores);
+
+router.get('/:categoryId/stores', categoryController.getStoresByCategory);
+
 module.exports = router;
 

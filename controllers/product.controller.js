@@ -101,9 +101,9 @@ exports.deleteProduct = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
-  exports.getProductsByStoreId = async (req, res) => {
+  exports.getProductsByStoreIdForOwner = async (req, res) => {
     try {
-        console.log('in getProductsByStoreId');
+        console.log('in getProductsByStoreId for OWNER');
        // const { storeId } = req.query;
        const storeId = req.user._id;
         console.log('storeId: ');
@@ -117,6 +117,35 @@ exports.deleteProduct = async (req, res) => {
         const products = await ProductServices.getProductsByStoreId(storeId);
         console.log("Products fetched successfully: ");
         console.log(products);
+        res.status(200).json({
+            status: true,
+            message: 'Products fetched successfully',
+            data: products,
+        });
+    } catch (err) {
+        console.error('Error fetching products:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to fetch products',
+            error: err.message,
+        });
+    }
+};
+
+exports.getProductsByStoreIdForUsers = async (req, res) => {
+    try {
+        console.log('In getProductsByStoreId for users');
+        const { storeId } = req.params; // Get storeId from request parameters
+        console.log('storeId:', storeId);
+
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: 'Invalid store ID' });
+        }
+
+        // Call the service method to fetch products by store ID
+        const products = await ProductServices.getProductsByStoreId(storeId);
+        console.log("Products fetched successfully: ", products);
         res.status(200).json({
             status: true,
             message: 'Products fetched successfully',

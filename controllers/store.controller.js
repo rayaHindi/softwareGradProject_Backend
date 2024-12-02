@@ -1,7 +1,8 @@
 const mongoose = require('mongoose'); // Import mongoose
 const jwt = require("jsonwebtoken");
-const StoreService = require('../services/store.services');
-const CategoryModel = require('../model/category.model'); // Import Category Model
+const storeService = require('../services/store.services');
+const categoryModel = require('../model/category.model'); // Import Category Model
+const categoryService= require('../services/category.services');
 exports.register = async (req, res, next) => {
     try {
         const {
@@ -22,7 +23,7 @@ exports.register = async (req, res, next) => {
         }
 
         // Call StoreService to register the store
-        const newStore = await StoreService.registerStore({
+        const newStore = await storeService.registerStore({
             storeName,
             contactEmail,
             phoneNumber,
@@ -39,13 +40,9 @@ exports.register = async (req, res, next) => {
             return res.status(400).json({ status: false, message: "Store registration failed" });
         }
 
-        // Add store reference to the category
-        const storeId = newStore._id;
-        await CategoryModel.findByIdAndUpdate(
-            selectedGenreId,
-            { $push: { stores: storeId } }, // Add store reference to the stores array
-            { new: true }
-        );
+        
+         // Add store reference to the category using categoryService
+         await categoryService.addStoreToCategory(selectedGenreId, newStore._id);
 
         // Generate token
         const tokenData = { _id: newStore._id, email: newStore.contactEmail, userType: 'store' };
@@ -69,3 +66,21 @@ exports.register = async (req, res, next) => {
     }
 };
 
+exports.getStoreDetails = async (req, res) => {
+    try {
+        const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
+        const store = await storeService.getStoreDetails(storeId);
+
+        res.status(200).json({
+            status: true,
+            storeName: store.storeName,
+            contactEmail: store.contactEmail,
+            phoneNumber: store.phoneNumber,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+        });
+    }
+};

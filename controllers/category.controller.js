@@ -57,3 +57,28 @@ exports.getAllCategories = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+exports.getCategoriesAndStores = async (req, res) => {
+    try {
+        const categoriesWithStores = await categoryService.fetchCategoriesWithStores();
+        res.status(200).json(categoriesWithStores);
+    } catch (error) {
+        console.error('Error fetching categories and stores:', error);
+        res.status(500).json({ status: false, message: 'Error fetching categories and stores' });
+    }
+};
+
+exports.getStoresByCategory = async (req, res) => {
+    try {
+        const { categoryId } = req.params;
+
+        // Call the service to get all stores under the category
+        const stores = await categoryService.getStoresByCategory(categoryId);
+
+        // Send success response
+        res.status(200).json(stores);
+    } catch (error) {
+        console.error('Error fetching stores:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
