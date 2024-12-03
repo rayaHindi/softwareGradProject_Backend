@@ -1,8 +1,11 @@
 const ProductModel = require("../model/product.model");
+const StoreModel = require("../model/store.model");
+const mongoose = require('mongoose');
+
 
 class ProductServices {
-    // Add a new product
-    static async addProduct(productData) {
+    // Adda a new product
+    static async addProduct(productData, storeId) {
         try {
             // Validate availableOptions format and set default values
             if (productData.availableOptions) {
@@ -45,40 +48,35 @@ class ProductServices {
                 productData.availableOptionStatus = {}; // Default to empty object
             }
     
-            // Create and save the new product
-            const newProduct = new ProductModel(productData);
+            // Validate storeId
+            if (!mongoose.Types.ObjectId.isValid(storeId)) {
+                throw new Error('Invalid store ID');
+            }
+    
+            // Find the store by its ID
+            const store = await StoreModel.findById(storeId);
+            if (!store) {
+                throw new Error('Store not found');
+            }
+            productData.category = store.category;
+            // Create and save the new product with an explicit reference to the store
+            const newProduct = new ProductModel({
+                ...productData,
+                store: storeId // Explicitly set the store reference in the product
+            });
             await newProduct.save();
+    
+            // Add the new product to the store's list of products
+            store.products.push(newProduct._id);
+            await store.save();
+    
             return newProduct;
         } catch (err) {
             throw new Error("Error adding product: " + err.message);
         }
     }
     
-    
-
-    // Get all products
-    static async getAllProducts() {
-        try {
-            return await ProductModel.find(); // Fetch all products from the database
-        } catch (err) {
-            throw new Error("Error fetching products: " + err.message);
-        }
-    }
-
-    // Get product by ID
-    static async getProductById(productId) {
-        try {
-            const product = await ProductModel.findById(productId);
-            if (!product) {
-                throw new Error("Product not found");
-            }
-            return product;
-        } catch (err) {
-            throw new Error("Error fetching product: " + err.message);
-        }
-    }
-
-    // Update a product by ID
+     // Update a product by ID
 static async updateProductById(productId, updateData) {
     try {
         // Validate availableOptions format and set default values
@@ -86,7 +84,7 @@ static async updateProductById(productId, updateData) {
             for (const [key, values] of Object.entries(updateData.availableOptions)) {
                 if (!Array.isArray(values)) {
                     throw new Error(
-                        `Invalid availableOptions format: '${key}' must have an array of values`
+                        `Invalid availableOptions format: '${key}'`
                     );
                 }
 
@@ -151,7 +149,24 @@ static async updateProductById(productId, updateData) {
           throw new Error("Error deleting product: " + err.message);
         }
       }
-
+    
+    // Remove product reference from store
+static async removeProductFromStore(storeId, productId) {
+    try {
+      const store = await StoreModel.findById(storeId);
+      if (!store) {
+        throw new Error("Store not found");
+      }
+      // Remove the product ID from the store's products list
+      store.products = store.products.filter(
+        (id) => id.toString() !== productId.toString()
+      );
+      await store.save();
+    } catch (err) {
+      throw new Error("Error updating store: " + err.message);
+    }
+}
+  
     // Get all products by category
     static async getProductsByCategory(category) {
         try {
@@ -160,6 +175,40 @@ static async updateProductById(productId, updateData) {
             throw new Error("Error fetching products by category: " + err.message);
         }
     }
+
+    static async getProductsByStoreId(storeId) {
+        try {
+            // Query the products by `store` field that references the store ID
+            return await ProductModel.find({ store: storeId });
+        } catch (err) {
+            console.log("Error fetching products by store ID: " + err.message);
+            throw new Error("Error fetching products by store ID: " + err.message);
+        }
+    }
+
+    // Get product by ID
+    static async getProductById(productId) {
+        try {
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new Error("Product not found");
+            }
+            return product;
+        } catch (err) {
+            throw new Error("Error fetching product: " + err.message);
+        }
+    }
+
+     // Get all products
+     static async getAllProducts() {
+        try {
+            return await ProductModel.find(); // Fetch all products from the database
+        } catch (err) {
+            throw new Error("Error fetching products: " + err.message);
+        }
+    }
+
 }
+
 
 module.exports = ProductServices;

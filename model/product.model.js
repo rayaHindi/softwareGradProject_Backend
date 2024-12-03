@@ -23,6 +23,11 @@ const productSchema = new Schema({
         required: [true, "Product category is required"],
         trim: true,
     },
+    store: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'store', // Reference to the 'store' model
+        required: true, // Make it required to ensure every product belongs to a store
+    },
     stock: {
         type: Number,
         required: [true, "Stock quantity is required"],
@@ -61,6 +66,6 @@ productSchema.pre("save", function (next) {
 });
 
 
-const ProductModel = db.model('Product', productSchema);
+const ProductModel = db.model('product', productSchema);
 module.exports = ProductModel;
 
