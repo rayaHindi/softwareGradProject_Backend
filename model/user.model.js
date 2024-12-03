@@ -18,8 +18,13 @@ const userSchema = new Schema({
     phoneNumber: {
         type: String,
         required: [true, "Phone number is required"],
+<<<<<<< HEAD
         // match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
         unique: true
+=======
+        //match: [/^\d{10}$/, "Phone number format is not correct"], // Example regex for 10-digit number
+        //unique: true
+>>>>>>> 11cffdab4d513c8a204fb04eb564402caa5cacc5
     },
     email: {
         type: String,
@@ -33,13 +38,14 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
+        minlength: 6,
         required: [true, "Password is required"],
     },
     accountType: {
         type: String,
         enum: ['U', 'A'], // Example: 'U' for User, 'A' for Admin
         required: true,
-        //default: 'U'
+        default: 'U'
     },
     selectedGenres: {
         type: [String], // Array of strings

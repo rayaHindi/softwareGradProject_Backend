@@ -1,10 +1,10 @@
 //user.controller.js
 const UserServices = require('../services/user.services.js');
+const StoreServices = require('../services/store.services.js');
+
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 require('dotenv').config(); // Load environment variables
-
-
 
 
 exports.register = async (req, res, next) => {
@@ -13,7 +13,11 @@ exports.register = async (req, res, next) => {
         const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
         // Call the UserService to register the user with all fields
+<<<<<<< HEAD
         const successRes = await UserServices.registerUser({
+=======
+        const newUser = await UserServices.registerUser({
+>>>>>>> 11cffdab4d513c8a204fb04eb564402caa5cacc5
             firstName,
             lastName,
             email,
@@ -23,19 +27,64 @@ exports.register = async (req, res, next) => {
             selectedGenres
         });
 
-        // Respond with a success message
+        // Generate token
+        const tokenData = { _id: newUser._id, email: newUser.email, userType: 'user' };
+        const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
+
+        // Respond with success message, token, and user data
         res.status(201).json({
             status: true,
             message: "Registered successfully",
-            data: successRes
+            token: token,
+            userType: 'user',
+            data: newUser,
         });
     } catch (err) {
-        // Catch and handle errors, returning a meaningful error response
+        // Catch duplicate email error (MongoServerError code 11000 indicates duplicate key error)
+        if (err.name === 'MongoServerError' && err.code === 11000) {
+            return res.status(400).json({
+                status: false,
+                message: "User with this email already exists"
+            });
+        }
+        
+        // Catch and handle other errors, returning a meaningful error response
         console.error(err);
         res.status(500).json({
             status: false,
             message: "Error registering user",
             error: err.message
+        });
+    }
+};
+exports.checkEmailAvailability = async (req, res) => {
+    try {
+        const { email } = req.query;
+
+        // Validate the email
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ status: false, message: "Invalid email address" });
+        }
+
+        // Check if user already exists by email
+        const existingUser = await UserServices.findUserByEmail(email);
+        if (existingUser) {
+            return res.status(409).json({
+                status: false,
+                message: "User with this email already exists",
+            });
+        }
+
+        res.status(200).json({
+            status: true,
+            message: "Email is available",
+        });
+    } catch (error) {
+        console.error('Error during email availability check:', error);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to check email availability',
+            error: error.message,
         });
     }
 };
@@ -50,10 +99,25 @@ exports.login = async (req, res, next) => {
             return res.status(400).json({ status: false, message: 'Parameters are not correct' });
         }
 
-        // Check if user exists
         let user = await UserServices.checkUser(email);
-        if (!user) {
-            return res.status(404).json({ status: false, message: 'User with this email does not exist' });
+        let userType;
+
+        // Check if user exists in the User model
+        if (user) {
+            // If the user is an admin, set userType as 'admin'
+            if (user.accountType === 'A') {
+                userType = 'admin';
+            } else {
+                userType = 'user';
+            }
+        } else {
+            // Check if store owner exists in the Store model
+            user = await StoreServices.checkStoreByEmail(email);
+            if (!user) {
+                return res.status(404).json({ status: false, message: 'User with this email does not exist' });
+            }
+
+            userType = 'store';
         }
 
         // Verify password
@@ -62,28 +126,24 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({ status: false, message: 'Password does not match' });
         }
 
-        // Ensure secret is set
-        /*
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            console.error('JWT secret is not set in the environment variables!');
-            return res.status(500).json({ status: false, message: 'Server configuration error' });
-        }*/
-
         // Generate token
-        const tokenData = { _id: user._id, email: user.email };
-        //const token = await UserServices.generateAccessToken(tokenData, 'secret', "1h");
-        const token = jwt.sign({ _id: user._id, email: user.email }, "secret", { expiresIn: '1h' });
+        const tokenData = { _id: user._id, email: user.email, userType };
+        const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
 
         console.log('after generating token for the user token:');
         console.log(token);
 
-        res.status(200).json({ status: true, success: "sendData", token: token });
+        console.log('User Type:');
+        console.log(userType);
+
+        // Return user type along with the token
+        res.status(200).json({ status: true, success: "sendData", token: token, userType: userType });
     } catch (error) {
         console.error('Error during login:', error);
         next(error);
     }
 };
+
 
 exports.validateToken = async (req, res) => {
     try {
@@ -123,7 +183,7 @@ exports.forgotPassword = async (req, res, next) => {
             return res.status(404).json({ status: false, message: 'User not found' });
         }
         // Generate a temporary password
-        const tempPassword = Math.random().toString(36).slice(-8); // Simple random password (8 characters)
+        const tempPassword = '5555';//Math.random().toString(36).slice(-8); // Simple random password (8 characters)
         await UserServices.resetUserPassword(user._id, tempPassword)
         console.log(`temp pass ${tempPassword}`);
 
@@ -151,18 +211,19 @@ exports.forgotPassword = async (req, res, next) => {
     }
 };
 
+
 exports.resetPassword = async (req, res, next) => {
     try {
-        const { newPassword } = req.body;
-        const userId = req.user._id; // Extracted from middleware
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user._id; // Extracted from middleware (assuming the user is authenticated)
 
         // Call the service to reset the password
-        await UserServices.resetUserPassword(userId, newPassword);
+        await UserServices.resetUserPasswordWithOldPass(userId, oldPassword, newPassword);
 
         res.status(200).json({ status: true, message: 'Password reset successfully.' });
     } catch (error) {
-        console.log(error, 'Error resetting password');
-        next(error);
+        console.error('Error resetting password:', error);
+        res.status(400).json({ status: false, message: error.message });
     }
 };
 

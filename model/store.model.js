@@ -1,5 +1,7 @@
+// store.model.js
 const mongoose = require('mongoose');
 const db = require('../config/db');
+const bcrypt = require("bcrypt");
 const { Schema } = mongoose;
 
 // Store schema
@@ -7,28 +9,22 @@ const storeSchema = new Schema({
     storeName: {
         type: String,
         required: true,
-        trim: true // Removes extra whitespace
+        trim: true, // Removes extra whitespace
+       /// unique:true,
     },
     contactEmail: {
         type: String,
         lowercase: true,
         required: true,
-        // unique: true
     },
     phoneNumber: {
         type: String,
         required: true,
-        // unique: true,
-        /*  validate: {
-              validator: function (v) {
-                  return /^\+?[1-9]\d{1,14}$/.test(v); // Validate international phone number format
-              },
-              message: props => `${props.value} is not a valid phone number!`
-          }*/
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: 6
     },
     accountType: {
         type: String,
@@ -43,17 +39,36 @@ const storeSchema = new Schema({
         type: String,
         required: true
     },
+    dateCreated: {
+        type: Date,
+        default: Date.now // Automatically set the creation date
+    },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'category',
+        required: true // Make it required to ensure every store belongs to a category
+    },
+    products: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'product',
+        default: [],
+    }],
     allowSpecialOrders: {
         type: Boolean,
         default: false // Default to not allowing special orders
     },
-    selectedGenre: {
-        type: String, // Single genre as a string
-        required: true // Make it required to ensure every store has a genre
-    },
-    dateCreated: {
-        type: Date,
-        default: Date.now // Automatically set the creation date
+    specialOrders: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'specialOrder',
+        default: [],
+    }],
+    visaCard: {
+        cardNumber: { type: String, required: false },
+        expiryMonth: { type: String, required: false },
+        expiryYear: { type: String, required: false },
+        cardCode: { type: String, required: false },
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
     }
 });
 
@@ -73,6 +88,16 @@ storeSchema.pre('save', async function () {
     }
 });
 
+storeSchema.methods.comparePassword = async function (candidatePassword) {
+    try {
+        console.log('----------------no password', this.password);
+        // @ts-ignore
+        const isMatch = await bcrypt.compare(candidatePassword, this.password);
+        return isMatch;
+    } catch (error) {
+        throw error;
+    }
+};
 // Compile model
 const StoreModel = db.model('store', storeSchema);
 

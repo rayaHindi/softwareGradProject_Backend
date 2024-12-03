@@ -2,11 +2,12 @@
 
 const router = require("express").Router();
 const ProductController = require('../controllers/product.controller.js');
+const authenticateToken = require('../middleware/authMiddleware');
 
-router.post("/addNewPastryProduct", ProductController.addNewProduct);
+router.post("/addNewPastryProduct", authenticateToken, ProductController.addNewProduct);
 router.get("/getAllProducts", ProductController.getAllProducts);
-router.put('/updateProductInfo', ProductController.updateProduct);
-router.delete('/deleteProduct/:productId', ProductController.deleteProduct);
+router.put('/updateProductInfo', authenticateToken, ProductController.updateProduct);
+router.delete('/deleteProduct/:productId', authenticateToken, ProductController.deleteProduct);
 
 /*
 router.get('/products', productController.getAllProductsController);
