@@ -23,7 +23,8 @@ const storeSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: 6
     },
     accountType: {
         type: String,

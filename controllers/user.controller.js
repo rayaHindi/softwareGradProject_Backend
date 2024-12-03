@@ -53,6 +53,37 @@ exports.register = async (req, res, next) => {
         });
     }
 };
+exports.checkEmailAvailability = async (req, res) => {
+    try {
+        const { email } = req.query;
+
+        // Validate the email
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ status: false, message: "Invalid email address" });
+        }
+
+        // Check if user already exists by email
+        const existingUser = await UserServices.findUserByEmail(email);
+        if (existingUser) {
+            return res.status(409).json({
+                status: false,
+                message: "User with this email already exists",
+            });
+        }
+
+        res.status(200).json({
+            status: true,
+            message: "Email is available",
+        });
+    } catch (error) {
+        console.error('Error during email availability check:', error);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to check email availability',
+            error: error.message,
+        });
+    }
+};
 
 exports.login = async (req, res, next) => {
     try {

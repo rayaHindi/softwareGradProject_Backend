@@ -33,6 +33,17 @@ class UserServices {
             console.log(err);
         }
     }
+    static async findUserByEmail(email) {
+        try {
+            const user = await UserModel.findOne({ email });
+            /*if (!user) {
+                throw new Error('User not found');
+            }*/
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
     static async getUserById(userId) {
         try {
             return await UserModel.findById(userId).select('-password'); // Exclude the password
