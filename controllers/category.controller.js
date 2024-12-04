@@ -2,9 +2,10 @@
 const categoryService = require('../services/category.services');
 
 // Controller to handle adding a new category
+// Controller to handle adding a new category
 exports.addCategory = async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const { name, description, image } = req.body;
 
         // Validate required fields
         if (!name) {
@@ -12,7 +13,7 @@ exports.addCategory = async (req, res) => {
         }
 
         // Call the service to add the category
-        const newCategory = await categoryService.addCategory({ name, description });
+        const newCategory = await categoryService.addCategory({ name, description, image });
 
         // Send success response
         res.status(201).json({ message: 'Category added successfully', category: newCategory });
@@ -21,6 +22,7 @@ exports.addCategory = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 
 // Controller to handle deleting a category

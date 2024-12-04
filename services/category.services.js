@@ -3,11 +3,14 @@ const CategoryModel = require('../model/category.model');
 
 class CategoryServices {
     // Add a new category
-    static async addCategory({ name, description }) {
+    static async addCategory({ name, description, image }) {
         try {
+            console.log('addding new category phot: ');
+            console.log(image);
             const newCategory = new CategoryModel({
                 name,
                 description,
+                image, // Save the photo URL in the database
             });
             await newCategory.save();
             return newCategory;
@@ -16,7 +19,7 @@ class CategoryServices {
             throw new Error('Unable to add category');
         }
     }
-
+    
     // Check if a category has stores
     static async hasStores(id) {
         try {

@@ -18,6 +18,11 @@ const productSchema = new Schema({
         required: [true, "Product price is required"],
         min: [0, "Price cannot be negative"],
     },
+    image: {
+        type: String, // URL of the photo
+        required: false,
+        trim: true,
+    },
     category: {
         type: String,
         required: [true, "Product category is required"],
