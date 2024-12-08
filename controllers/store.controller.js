@@ -13,6 +13,7 @@ exports.register = async (req, res, next) => {
             accountType,
             country,
             city,
+            logo,
             allowSpecialOrders,
             selectedGenreId // This is the category ID
         } = req.body;
@@ -31,6 +32,7 @@ exports.register = async (req, res, next) => {
             accountType,
             country,
             city,
+            logo,
             allowSpecialOrders,
             selectedGenreId
         });

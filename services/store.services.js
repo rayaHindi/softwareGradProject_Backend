@@ -2,7 +2,7 @@ const StoreModel = require('../model/store.model');
 const UserService = require('../services/user.services');
 
 class StoreService {
-    static async registerStore({ storeName, contactEmail, phoneNumber, password, accountType = 'S', country, city, allowSpecialOrders, selectedGenreId }) {
+    static async registerStore({ storeName, contactEmail, phoneNumber, password, accountType = 'S', country, city, logo, allowSpecialOrders, selectedGenreId }) {
         try {
             const existingStore = await StoreModel.findOne({ storeName });
             if (existingStore) {
@@ -28,6 +28,7 @@ class StoreService {
                 accountType,
                 country,
                 city,
+                logo,
                 allowSpecialOrders,
                 category: selectedGenreId // Use category to refer to the selected genre ID
             });

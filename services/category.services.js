@@ -96,6 +96,7 @@ class CategoryServices {
                 storeName: store.storeName,
                 contactEmail: store.contactEmail,
                 phoneNumber: store.phoneNumber,
+                logo: store.logo,
             }));
         } catch (error) {
             console.error('Error fetching stores by category:', error);
