@@ -54,6 +54,23 @@ const productSchema = new Schema({
         type: Number,
         min: [1, "Time must be at least 1 unit"], // Time in minutes
     },
+    isUponOrder: {
+        type: Boolean,
+        default: false
+    }, // New field for upon-order products
+    tags: {
+        type: [String],
+        default: [], // Empty array by default //["vegan", "gluten-free", "organic"]
+    },
+    isVisible: {
+        type: Boolean,
+        default: true,
+    },
+    salesCount: {
+        type: Number,
+        default: 0,
+    },
+
     createdAt: {
         type: Date,
         default: Date.now,
@@ -65,7 +82,7 @@ const productSchema = new Schema({
 });
 
 productSchema.pre("save", function (next) {
-    this.inStock = this.stock > 0; // Automatically set `inStock` based on stock value
+    this.inStock = this.stock > 0 && !this.isUponOrder; // Stock doesn't matter for made-to-order
     this.updatedAt = Date.now(); // Update timestamp
     next();
 });

@@ -47,7 +47,11 @@ class ProductServices {
             } else {
                 productData.availableOptionStatus = {}; // Default to empty object
             }
-    
+
+            if (productData.isUponOrder && !productData.timeRequired) {
+                throw new Error('Time required must be specified for made-to-order products');
+            }
+            
             // Validate storeId
             if (!mongoose.Types.ObjectId.isValid(storeId)) {
                 throw new Error('Invalid store ID');

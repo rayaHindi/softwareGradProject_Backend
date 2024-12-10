@@ -1,8 +1,8 @@
 const CartModel = require('../model/cart.model');
-
+const ProductModel = require('../model/product.model');
 class CartServices {
     // Add an item to the cart
-    static async addItemToCart(userId, productId, storeId, quantity, price) {
+    static async addItemToCart(userId, productId, storeId, quantity, selectedOptions, timeRequired) {
         try {
             let cart = await CartModel.findOne({ userId });
 
@@ -15,18 +15,37 @@ class CartServices {
                 });
             }
 
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new Error('Product not found');
+            }
+
             const existingItem = cart.items.find(
                 (item) => item.productId.toString() === productId
             );
 
             if (existingItem) {
+                // Update the quantity and selected options if the item already exists
                 existingItem.quantity += quantity;
+                existingItem.selectedOptions = selectedOptions;
+                existingItem.timeRequired = timeRequired || product.timeRequired || 0;
             } else {
-                cart.items.push({ productId, storeId, quantity });
+                // Add a new item to the cart
+                cart.items.push({
+                    productId,
+                    storeId,
+                    quantity,
+                    selectedOptions,
+                    timeRequired: timeRequired || product.timeRequired || 0,
+                });
             }
 
-            // Update total price
-            cart.totalPrice += price * quantity;
+            // Recalculate total price
+            cart.totalPrice = cart.items.reduce(
+                (total, item) =>
+                    total + item.quantity * product.price, // Use product price
+                0
+            );
 
             await cart.save();
             return cart;
@@ -36,15 +55,47 @@ class CartServices {
         }
     }
 
-    // Fetch the user's cart
-    static async getCartByUserId(userId) {
-        try {
-            return await CartModel.findOne({ userId }).populate('items.productId');
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            throw new Error('Unable to fetch cart');
+  // Fetch the user's cart with cleaned response
+static async getCartByUserId(userId) {
+    try {
+        const cart = await CartModel.findOne({ userId })
+            .populate('items.productId', 'name description price image category')
+            .populate('items.storeId', 'storeName'); // Populate only necessary fields
+
+        if (!cart) {
+            return { success: true, cart: { items: [] } }; // Return empty cart if not found
         }
+
+        // Clean and structure the cart response
+        const cleanedCart = {
+            _id: cart._id,
+            userId: cart.userId,
+            totalPrice: cart.totalPrice,
+            items: cart.items.map(item => ({
+                productId: {
+                    _id: item.productId?._id,
+                    name: item.productId?.name,
+                    description: item.productId?.description,
+                    price: item.productId?.price,
+                    image: item.productId?.image,
+                },
+                storeId: {
+                    _id: item.storeId?._id,
+                    storeName: item.storeId?.storeName,
+                },
+                quantity: item.quantity,
+                selectedOptions: item.selectedOptions,
+                timeRequired: item.timeRequired,
+            })),
+        };
+
+        return { success: true, cart: cleanedCart };
+    } catch (error) {
+        console.error('Error fetching cart:', error);
+        throw new Error('Unable to fetch cart');
     }
+}
+
 
     // Remove an item from the cart
     static async removeItemFromCart(userId, productId) {

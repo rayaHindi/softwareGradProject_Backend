@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const db = require('../config/db'); // Assuming you are using a custom DB configuration
+const db = require('../config/db');
 const { Schema } = mongoose;
 
 // Cart Item Schema
@@ -19,7 +19,17 @@ const cartItemSchema = new Schema({
         required: true,
         default: 1,
     },
+    selectedOptions: {
+        type: Map, // Key-value pairs for selected options
+        of: String,
+        default: {}, // Default to an empty object
+    },
+    timeRequired: {
+        type: Number, // Optional: Store the total time required
+        default: 0,
+    },
 });
+
 
 // Cart Schema
 const cartSchema = new Schema({
