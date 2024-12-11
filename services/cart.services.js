@@ -56,29 +56,24 @@ class CartServices {
     }
 
   // Fetch the user's cart with cleaned response
+// Fetch the user's cart with full product information
 static async getCartByUserId(userId) {
     try {
         const cart = await CartModel.findOne({ userId })
-            .populate('items.productId', 'name description price image category')
-            .populate('items.storeId', 'storeName'); // Populate only necessary fields
+            .populate('items.productId') // Populate the entire product object
+            .populate('items.storeId', 'storeName'); // Populate only necessary fields for store
 
         if (!cart) {
             return { success: true, cart: { items: [] } }; // Return empty cart if not found
         }
 
-        // Clean and structure the cart response
+        // Structure the cart response
         const cleanedCart = {
             _id: cart._id,
             userId: cart.userId,
             totalPrice: cart.totalPrice,
             items: cart.items.map(item => ({
-                productId: {
-                    _id: item.productId?._id,
-                    name: item.productId?.name,
-                    description: item.productId?.description,
-                    price: item.productId?.price,
-                    image: item.productId?.image,
-                },
+                productId: item.productId, // Return the entire product object
                 storeId: {
                     _id: item.storeId?._id,
                     storeName: item.storeId?.storeName,
