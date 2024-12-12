@@ -1,6 +1,6 @@
 const StoreModel = require('../model/store.model');
 const UserService = require('../services/user.services');
-
+const CityModel = require('../model/city.model');
 class StoreService {
     static async registerStore({ storeName, contactEmail, phoneNumber, password, accountType = 'S', country, city, logo, allowSpecialOrders, selectedGenreId }) {
         try {
@@ -8,17 +8,22 @@ class StoreService {
             if (existingStore) {
                 throw new Error('A store with this name already exists');
             }
-    
+
             // Check if the contact email matches any user email or existing store email
             const existingUser = await UserService.findUserByEmail(contactEmail);
             if (existingUser) {
                 throw new Error('A user with this email already exists');
             }
-            
+
             const existingStoreByEmail = await StoreModel.findOne({ contactEmail });
             if (existingStoreByEmail) {
                 throw new Error('A store with this email already exists');
             }
+            const cityExists = await CityModel.findById(city);
+            if (!cityExists) {
+                throw new Error('Invalid city selected');
+            }
+
             // Create a new store with all the provided fields
             const createStore = new StoreModel({
                 storeName,

@@ -41,7 +41,8 @@ const storeSchema = new Schema({
         required: true
     },
     city: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'city', // Referencing the City model
         required: true
     },
     dateCreated: {

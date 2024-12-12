@@ -205,7 +205,7 @@ static async removeProductFromStore(storeId, productId) {
 
      // Get all products
      static async getAllProducts() {
-        try {
+        try { 
             return await ProductModel.find(); // Fetch all products from the database
         } catch (err) {
             throw new Error("Error fetching products: " + err.message);

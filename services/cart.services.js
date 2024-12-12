@@ -21,24 +21,26 @@ class CartServices {
             }
 
             const existingItem = cart.items.find(
-                (item) => item.productId.toString() === productId
+                (item) =>
+                    item.productId.toString() === productId &&
+                    JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions)
             );
 
-            if (existingItem) {
-                // Update the quantity and selected options if the item already exists
-                existingItem.quantity += quantity;
-                existingItem.selectedOptions = selectedOptions;
-                existingItem.timeRequired = timeRequired || product.timeRequired || 0;
-            } else {
-                // Add a new item to the cart
-                cart.items.push({
-                    productId,
-                    storeId,
-                    quantity,
-                    selectedOptions,
-                    timeRequired: timeRequired || product.timeRequired || 0,
-                });
-            }
+            
+        if (existingItem) {
+            // Update the quantity if the product and options are the same
+            existingItem.quantity += quantity;
+        } else {
+            // Add a new item to the cart if options differ or item doesn't exist
+            cart.items.push({
+                productId,
+                storeId,
+                quantity,
+                selectedOptions,
+                timeRequired: timeRequired || product.timeRequired || 0,
+            });
+        }
+
 
             // Recalculate total price
             cart.totalPrice = cart.items.reduce(
