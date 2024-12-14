@@ -28,6 +28,14 @@ const cartItemSchema = new Schema({
         type: Number, // Optional: Store the total time required
         default: 0,
     },
+    pricePerUnitWithOptionsCost: {
+        type: Number, // Store the price of the product at the time it is added to the cart
+        required: true,
+    },
+    totalPriceWithQuantity:{
+        type: Number, // Store the price of the product at the time it is added to the cart
+        required: true,
+    },
 });
 
 
@@ -40,7 +48,17 @@ const cartSchema = new Schema({
         unique: true, // Ensures one cart per user
     },
     items: [cartItemSchema], // Array of cart items
-    totalPrice: {
+    /*totalPrice: {
+        type: Number,
+        required: true,
+        default: 0,
+    },*/
+    InstantTotalPrice: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
+    ScheduledTotalPrice: {
         type: Number,
         required: true,
         default: 0,

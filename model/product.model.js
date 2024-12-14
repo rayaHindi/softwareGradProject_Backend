@@ -70,7 +70,15 @@ const productSchema = new Schema({
         type: Number,
         default: 0,
     },
-
+    deliveryType: {
+        type: String,
+        enum: ['instant', 'scheduled'],
+        default: 'instant'
+    },
+    deliveryLeadTime: {
+        type: Number,
+        default: 0,
+    }, // For 'scheduled' type, in hours or days
     createdAt: {
         type: Date,
         default: Date.now,

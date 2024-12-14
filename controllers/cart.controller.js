@@ -2,7 +2,7 @@ const CartServices = require('../services/cart.services');
 
 exports.addItem = async (req, res) => {
     try {
-        const { productId, storeId, quantity, selectedOptions, timeRequired } = req.body;
+        const { productId, storeId, quantity, selectedOptions, timeRequired, pricePerUnitWithOptionsCost } = req.body;
         const userId = req.user._id; // Extracted from middleware
 
         const cart = await CartServices.addItemToCart(
@@ -11,7 +11,8 @@ exports.addItem = async (req, res) => {
             storeId,
             quantity,
             selectedOptions,
-            timeRequired
+            timeRequired,
+            pricePerUnitWithOptionsCost
         );
 
         res.status(200).json({ success: true, cart });
@@ -34,14 +35,13 @@ exports.getCart = async (req, res) => {
     }
 };
 
-
-
 exports.updateCartItem = async (req, res) => {
     try {
-        const { productId, quantity } = req.body;
+        const { productId, quantity,selectedOptions } = req.body;
         const userId = req.user._id; // Extracted from middleware
 
-        const updatedCart = await CartServices.updateCartItem(userId, productId, quantity);
+        // Call the service function
+        const updatedCart = await CartServices.updateCartItem(userId, productId, quantity, selectedOptions);
 
         res.status(200).json({ success: true, cart: updatedCart });
     } catch (error) {
