@@ -57,7 +57,11 @@ const productSchema = new Schema({
     isUponOrder: {
         type: Boolean,
         default: false
-    }, // New field for upon-order products
+    },// New field for upon-order products
+    allowDeliveryDateSelection: {/////////////////////new/////////////
+        type: Boolean,
+        default: false, // Default to false
+    }, 
     tags: {
         type: [String],
         default: [], // Empty array by default //["vegan", "gluten-free", "organic"]
@@ -66,16 +70,16 @@ const productSchema = new Schema({
         type: Boolean,
         default: true,
     },
-    salesCount: {
+    salesCount: {/////////new///////////////
         type: Number,
         default: 0,
     },
-    deliveryType: {
+    deliveryType: {/////////new///////////////
         type: String,
         enum: ['instant', 'scheduled'],
         default: 'instant'
     },
-    deliveryLeadTime: {
+    deliveryLeadTime: {/////////new///////////////
         type: Number,
         default: 0,
     }, // For 'scheduled' type, in hours or days
@@ -90,8 +94,18 @@ const productSchema = new Schema({
 });
 
 productSchema.pre("save", function (next) {
+    // Automatically set `deliveryType` to 'scheduled' if `isUponOrder` is true
+    if (this.isUponOrder) {
+        this.deliveryType = 'scheduled';
+    }
     this.inStock = this.stock > 0 && !this.isUponOrder; // Stock doesn't matter for made-to-order
     this.updatedAt = Date.now(); // Update timestamp
+    next();
+});
+productSchema.pre("validate", function (next) {
+    if (this.deliveryType === "scheduled" && (this.timeRequired == null || this.timeRequired <= 0)) {
+        return next(new Error("Scheduled products must have a valid 'timeRequired' value greater than 0."));
+    }
     next();
 });
 

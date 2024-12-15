@@ -148,12 +148,12 @@ class CartServices {
             cart.InstantTotalPrice = cart.items
                 .filter((item) => item.productId.deliveryType === 'instant')
                 .reduce((total, item) => total + item.totalPriceWithQuantity, 0);
-            console.log('InstantTotalPrice', InstantTotalPrice);
+            console.log('InstantTotalPrice', cart.InstantTotalPrice);
 
             cart.ScheduledTotalPrice = cart.items
                 .filter((item) => item.productId.deliveryType === 'scheduled')
                 .reduce((total, item) => total + item.totalPriceWithQuantity, 0);
-            console.log('ScheduledTotalPrice', ScheduledTotalPrice);
+            console.log('ScheduledTotalPrice', cart.ScheduledTotalPrice);
 
             // Save the updated cart
             await cart.save();
