@@ -4,6 +4,7 @@ const StoreServices = require('../services/store.services.js');
 
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
+const UserModel = require('../model/user.model.js');
 require('dotenv').config(); // Load environment variables
 
 
@@ -13,11 +14,7 @@ exports.register = async (req, res, next) => {
         const { firstName, lastName, email, phoneNumber, password, accountType, selectedGenres } = req.body;
 
         // Call the UserService to register the user with all fields
-<<<<<<< HEAD
-        const successRes = await UserServices.registerUser({
-=======
         const newUser = await UserServices.registerUser({
->>>>>>> 11cffdab4d513c8a204fb04eb564402caa5cacc5
             firstName,
             lastName,
             email,
@@ -47,7 +44,7 @@ exports.register = async (req, res, next) => {
                 message: "User with this email already exists"
             });
         }
-        
+
         // Catch and handle other errors, returning a meaningful error response
         console.error(err);
         res.status(500).json({
@@ -226,7 +223,32 @@ exports.resetPassword = async (req, res, next) => {
         res.status(400).json({ status: false, message: error.message });
     }
 };
+exports.getFullName = async (req, res) => {
+    try {
+        // Assuming the email is sent in the request body or headers
+        const email = req.headers['email'];
 
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        // Fetch the user from the database using the email
+        const user = await UserModel.findOne({ email }).select('firstName lastName');
+        console.log("user info");
+        console.log(user);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Send the user's full name as the response
+        res.json({
+            firstName: user.firstName,
+            lastName: user.lastName,
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
 exports.getPersonalInfo = async (req, res, next) => {
     try {
         const userId = req.user._id; // Extracted from middleware
