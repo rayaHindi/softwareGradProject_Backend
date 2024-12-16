@@ -160,3 +160,37 @@ exports.getProductsByStoreIdForUsers = async (req, res) => {
         });
     }
 };
+
+// controllers/product.controller.js
+
+exports.reduceQuantity = async (req, res) => {
+    const { productId } = req.params; // Get product ID from route parameters
+    const { quantity } = req.body;   // Get quantity from request body
+
+    try {
+        // Validate productId
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ message: 'Invalid product ID' });
+        }
+
+        // Validate quantity
+        if (!quantity || quantity <= 0) {
+            return res.status(400).json({ message: 'Invalid quantity value' });
+        }
+
+        // Call the service to reduce product quantity
+        const updatedProduct = await ProductServices.reduceProductQuantity(productId, quantity);
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        res.status(200).json({
+            message: 'Product quantity updated successfully',
+            product: updatedProduct,
+        });
+    } catch (error) {
+        console.error('Error reducing product quantity:', error.message);
+        res.status(500).json({ message: 'Error reducing product quantity', error: error.message });
+    }
+};

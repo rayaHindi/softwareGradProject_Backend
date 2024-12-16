@@ -77,12 +77,9 @@ const productSchema = new Schema({
     deliveryType: {/////////new///////////////
         type: String,
         enum: ['instant', 'scheduled'],
-        default: 'instant'
+        default: 'instant',
+        required: true,
     },
-    deliveryLeadTime: {/////////new///////////////
-        type: Number,
-        default: 0,
-    }, // For 'scheduled' type, in hours or days
     createdAt: {
         type: Date,
         default: Date.now,
@@ -98,6 +95,8 @@ productSchema.pre("save", function (next) {
     if (this.isUponOrder) {
         this.deliveryType = 'scheduled';
     }
+    this.allowDeliveryDateSelection = false; // Automatically disable date selection for instant
+
     this.inStock = this.stock > 0 && !this.isUponOrder; // Stock doesn't matter for made-to-order
     this.updatedAt = Date.now(); // Update timestamp
     next();

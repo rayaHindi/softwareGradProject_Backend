@@ -48,6 +48,13 @@ class ProductServices {
                 productData.availableOptionStatus = {}; // Default to empty object
             }
 
+            if (productData.deliveryType === 'instant') {
+                productData.allowDeliveryDateSelection = false; // Automatically set to false for "instant" delivery
+            } else if (productData.deliveryType === 'scheduled') {
+                productData.allowDeliveryDateSelection = productData.allowDeliveryDateSelection || false;
+            }
+            
+
             if (productData.isUponOrder && !productData.timeRequired) {
                 throw new Error('Time required must be specified for made-to-order products');
             }
@@ -122,6 +129,9 @@ class ProductServices {
                 }
             } else {
                 updateData.availableOptionStatus = {}; // Default to empty object if not provided
+            }
+            if (updateData.deliveryType === 'instant') {
+                updateData.allowDeliveryDateSelection = false; // Automatically reset to false
             }
 
             // Perform the update
@@ -209,6 +219,28 @@ class ProductServices {
             return await ProductModel.find(); // Fetch all products from the database
         } catch (err) {
             throw new Error("Error fetching products: " + err.message);
+        }
+    }
+    static async reduceProductQuantity(productId, quantity) {
+        try {
+            // Fetch the product by ID
+            const product = await ProductModel.findById(productId);
+
+            if (!product) {
+                throw new Error('Product not found');
+            }
+            console.log(`reducing product Id : ${productId}`);
+            console.log(`by quantity: ${quantity}`);
+
+            // Ensure quantity does not go below zero
+            product.stock = Math.max(product.stock - quantity, 0);
+
+            // Save the updated product
+            await product.save();
+
+            return product; // Return the updated product
+        } catch (error) {
+            throw new Error('Error reducing product quantity: ' + error.message);
         }
     }
 

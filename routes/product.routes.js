@@ -8,6 +8,7 @@ router.post("/addNewPastryProduct", authenticateToken, ProductController.addNewP
 router.get("/getAllProducts", ProductController.getAllProducts);
 router.put('/updateProductInfo', authenticateToken, ProductController.updateProduct);
 router.delete('/deleteProduct/:productId', authenticateToken, ProductController.deleteProduct);
+router.put('/reduce-quantity/:productId',authenticateToken, ProductController.reduceQuantity);
 
 /*
 router.get('/products', productController.getAllProductsController);

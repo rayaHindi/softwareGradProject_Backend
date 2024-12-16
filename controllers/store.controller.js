@@ -83,8 +83,101 @@ exports.getStoreDetails = async (req, res) => {
             storeName: store.storeName,
             contactEmail: store.contactEmail,
             phoneNumber: store.phoneNumber,
+            city: store.city?.name, // Include city
+            category: store.category?.name,
+            logo:store.logo,
+
         });
     } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: error.message,
+        });
+    }
+};
+exports.getDeliveryCities = async (req, res) => {
+    try {
+        const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
+        const deliveryCities = await storeService.getDeliveryCities(storeId);
+
+        res.status(200).json({
+            status: true,
+            deliveryCities, // Send the formatted delivery cities
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: 'Error fetching delivery cities',
+            error: error.message,
+        });
+    }
+};
+exports.getDeliveryCitiesByStoreId = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Store ID passed as a URL parameter
+
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({
+                status: false,
+                message: 'Invalid store ID',
+            });
+        }
+
+        const deliveryCities = await storeService.getDeliveryCities(storeId);
+
+        res.status(200).json({
+            status: true,
+            deliveryCities, // Send the formatted delivery cities
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: false,
+            message: 'Error fetching delivery cities',
+            error: error.message,
+        });
+    }
+};
+
+
+exports.updateDeliveryCities = async (req, res) => {
+    try {
+        const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
+        const { deliveryCities } = req.body; // Array of { city, deliveryCost }
+
+        // Validate input
+        if (!Array.isArray(deliveryCities)) {
+            return res.status(400).json({
+                status: false,
+                message: 'Invalid input: deliveryCities must be an array.',
+            });
+        }
+
+        // Validate each city and cost
+        for (const cityObj of deliveryCities) {
+            if (!mongoose.Types.ObjectId.isValid(cityObj.city)) {
+                return res.status(400).json({
+                    status: false,
+                    message: `Invalid city ID: ${cityObj.city}`,
+                });
+            }
+            if (cityObj.deliveryCost < 0) {
+                return res.status(400).json({
+                    status: false,
+                    message: `Delivery cost cannot be negative for city ID: ${cityObj.city}`,
+                });
+            }
+        }
+
+        // Call the service to update delivery cities
+        const updatedDeliveryCities = await storeService.updateDeliveryCities(storeId, deliveryCities);
+
+        res.status(200).json({
+            status: true,
+            message: 'Delivery cities updated successfully',
+            deliveryCities: updatedDeliveryCities,
+        });
+    } catch (error) {
+        console.error('Error updating delivery cities:', error.message);
         res.status(500).json({
             status: false,
             message: error.message,

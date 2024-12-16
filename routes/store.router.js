@@ -12,5 +12,12 @@ router.get('/getProductsByStoreId/:storeId', ProductController.getProductsByStor
 // Route to get store details
 router.get('/details', authenticateToken, StoreController.getStoreDetails);
 
+// Route to get delivery cities
+router.get('/getDelivery-cities', authenticateToken,StoreController.getDeliveryCities);
+router.get('/getDelivery-citiesByID/:storeId', StoreController.getDeliveryCitiesByStoreId);
+
+
+// Route to update delivery cities
+router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateDeliveryCities);
 
 module.exports = router;

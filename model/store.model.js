@@ -45,6 +45,23 @@ const storeSchema = new Schema({
         ref: 'city', // Referencing the City model
         required: true
     },
+    deliveryCities: {
+        type: [
+            {
+                city: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'city',
+                    required: true,
+                },
+                deliveryCost: {
+                    type: Number,
+                    required: true,
+                    min: 0,
+                },
+            },
+        ],
+        default: [], // Default to an empty array
+    },
     dateCreated: {
         type: Date,
         default: Date.now // Automatically set the creation date
