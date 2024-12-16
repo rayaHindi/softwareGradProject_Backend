@@ -113,7 +113,6 @@ exports.login = async (req, res, next) => {
             if (!user) {
                 return res.status(404).json({ status: false, message: 'User with this email does not exist' });
             }
-
             userType = 'store';
         }
 
@@ -133,8 +132,21 @@ exports.login = async (req, res, next) => {
         console.log('User Type:');
         console.log(userType);
 
-        // Return user type along with the token
-        res.status(200).json({ status: true, success: "sendData", token: token, userType: userType });
+        // Extract first name, last name, and email
+        const userData = {
+            email: user.email,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+        };
+
+        // Return user data, token, and userType
+        res.status(200).json({
+            status: true,
+            success: "sendData",
+            token: token,
+            userType: userType,
+            data: userData
+        });
     } catch (error) {
         console.error('Error during login:', error);
         next(error);
