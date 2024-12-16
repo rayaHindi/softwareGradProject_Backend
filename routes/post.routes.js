@@ -6,6 +6,6 @@ const postController = require('../controllers/post.controller');
 router.post('', postController.createPost);
 
 // Optional route to fetch all posts
-router.get('/', postController.getAllPosts);
+router.get('', postController.getAllPosts);
 
 module.exports = router;
