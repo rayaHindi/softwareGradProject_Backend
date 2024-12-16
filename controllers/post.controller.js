@@ -3,22 +3,39 @@ const Post = require('../model/post.model');
 // Create a new post
 exports.createPost = async (req, res) => {
     try {
-        console.log("im inside here")
-        const { firstName, lastName, email, content } = req.body;
+        console.log("im inside here");
+        const { firstName, lastName, email, content, images } = req.body;
 
         // Validate input
         if (!firstName || !lastName || !content) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
+        // Validate images
+        if (images && !Array.isArray(images)) {
+            return res.status(400).json({ message: 'Images must be an array of URLs.' });
+        }
+
         // Create and save post
-        const newPost = new Post({ firstName, lastName, email, content });
+        const newPost = new Post({
+            firstName,
+            lastName,
+            email,
+            content,
+            images, // Include the images array
+        });
+
         await newPost.save();
 
-        res.status(201).json({ message: 'Post successfully created', post: newPost });
+        res.status(201).json({
+            message: 'Post successfully created',
+            post: newPost,
+        });
     } catch (error) {
         console.error("Error creating post:", error);
-        res.status(500).json({ message: 'An error occurred while creating the post.' });
+        res.status(500).json({
+            message: 'An error occurred while creating the post.',
+        });
     }
 };
 
