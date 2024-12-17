@@ -38,13 +38,82 @@ exports.createPost = async (req, res) => {
         });
     }
 };
+exports.addLike = async (req, res) => {
+    try {
+        const { postId } = req.params;
+
+        // Find the post and increment likes
+        const post = await Post.findByIdAndUpdate(
+            postId,
+            { $inc: { likes: 1 } },
+            { new: true } // Return the updated document
+        );
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        res.status(200).json({ message: 'Like added successfully.', likes: post.likes });
+    } catch (error) {
+        console.error("Error adding like:", error);
+        res.status(500).json({ message: 'An error occurred while adding a like.' });
+    }
+};
+exports.addUpvote = async (req, res) => {
+    try {
+        const { postId } = req.params;
+
+        // Find the post and increment upvotes
+        const post = await Post.findByIdAndUpdate(
+            postId,
+            { $inc: { upvotes: 1 } },
+            { new: true }
+        );
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        res.status(200).json({ message: 'Upvote added successfully.', upvotes: post.upvotes });
+    } catch (error) {
+        console.error("Error adding upvote:", error);
+        res.status(500).json({ message: 'An error occurred while adding an upvote.' });
+    }
+};
+exports.addComment = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { username, comment } = req.body;
+
+        if (!username || !comment) {
+            return res.status(400).json({ message: 'Username and comment are required.' });
+        }
+
+        // Find the post and add the comment
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        post.comments.push({ username, comment });
+        await post.save();
+
+        res.status(200).json({ message: 'Comment added successfully.', comments: post.comments });
+    } catch (error) {
+        console.error("Error adding comment:", error);
+        res.status(500).json({ message: 'An error occurred while adding a comment.' });
+    }
+};
 
 // Get all posts (optional functionality)
 exports.getAllPosts = async (req, res) => {
     try {
+        console.log("im inside the fetch");
         const posts = await Post.find().sort({ createdAt: -1 });
         res.status(200).json(posts);
+        console.log("success");
     } catch (error) {
+        console.log("failure");
         console.error("Error fetching posts:", error);
         res.status(500).json({ message: 'An error occurred while fetching posts.' });
     }
