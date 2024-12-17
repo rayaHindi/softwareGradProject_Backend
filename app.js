@@ -9,6 +9,8 @@ const cartRoutes = require("./routes/cart.routes");
 const orderRoutes = require("./routes/order.routes");
 const cityRoutes = require("./routes/city.routes");
 
+const PostRoutes = require("./routes/post.routes");
+const { getAllPosts } = require("./controllers/post.controller");
 const app = express();
 app.use(bodyParser.json())
 
@@ -17,8 +19,10 @@ app.use("/", UserRoute);
 app.use('/store', storeRoutes);
 app.use('/category', categoryRoutes);
 app.use('/cart', cartRoutes);
-app.use('/order', orderRoutes); 
-app.use('/city', cityRoutes); 
+app.use('/order', orderRoutes);
+app.use('/city', cityRoutes);
 
+app.use('/posts', PostRoutes);
+app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);
 module.exports = app;

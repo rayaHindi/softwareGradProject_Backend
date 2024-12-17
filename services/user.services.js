@@ -26,6 +26,7 @@ class UserServices {
             throw err;
         }
     }
+
     static async getUserByEmail(email) {
         try {
             return await UserModel.findOne({ email });
@@ -72,13 +73,13 @@ class UserServices {
             // Update the user's password
             user.password = newPassword; // This will trigger the pre-save hook to hash the password
             await user.save();
-    
+
             return user;
         } catch (error) {
             throw error;
         }
     }
-    
+
 
     static async resetUserPasswordWithOldPass(userId, oldPassword, newPassword) {
         try {
@@ -87,26 +88,26 @@ class UserServices {
             if (!user) {
                 throw new Error('User not found');
             }
-    
+
             // Verify that the old password matches the hashed password in the database
             const isMatch = await bcrypt.compare(oldPassword, user.password);
             if (!isMatch) {
                 throw new Error('Old password is incorrect');
             }
-    
+
             // Hash the new password before saving it
-           // const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    
+            // const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
             // Update the user's password
             user.password = newPassword; // This will trigger the pre-save hook to hash the password
             await user.save();
-    
+
             return user;
         } catch (error) {
             throw error;
         }
     }
-    
+
     static async updateUserInfo(userId, updateData) {
         try {
             // Find the user by ID and update only the fields in updateData
@@ -164,6 +165,23 @@ class UserServices {
             throw new Error('Error fetching credit card data: ' + error.message);
         }
     }
+    static async getFullName(userId) {
+        try {
+            // Fetch user data by userId (or email, if you prefer)
+            const user = await UserModel.findById(userId).select('firstName lastName');
+
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Combine firstName and lastName to get full name
+            const fullName = `${user.firstName} ${user.lastName}`;
+            return fullName;
+        } catch (error) {
+            throw error;
+        }
+    }
+
 
 
 }
