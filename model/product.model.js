@@ -18,6 +18,11 @@ const productSchema = new Schema({
         required: [true, "Product price is required"],
         min: [0, "Price cannot be negative"],
     },
+    image: {
+        type: String, // URL of the photo
+        required: false,
+        trim: true,
+    },
     category: {
         type: String,
         required: [true, "Product category is required"],
@@ -49,6 +54,32 @@ const productSchema = new Schema({
         type: Number,
         min: [1, "Time must be at least 1 unit"], // Time in minutes
     },
+    isUponOrder: {
+        type: Boolean,
+        default: false
+    },// New field for upon-order products
+    allowDeliveryDateSelection: {/////////////////////new/////////////
+        type: Boolean,
+        default: false, // Default to false
+    }, 
+    tags: {
+        type: [String],
+        default: [], // Empty array by default //["vegan", "gluten-free", "organic"]
+    },
+    isVisible: {
+        type: Boolean,
+        default: true,
+    },
+    salesCount: {/////////new///////////////
+        type: Number,
+        default: 0,
+    },
+    deliveryType: {/////////new///////////////
+        type: String,
+        enum: ['instant', 'scheduled'],
+        default: 'instant',
+        required: true,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
@@ -60,8 +91,20 @@ const productSchema = new Schema({
 });
 
 productSchema.pre("save", function (next) {
-    this.inStock = this.stock > 0; // Automatically set `inStock` based on stock value
+    // Automatically set `deliveryType` to 'scheduled' if `isUponOrder` is true
+    if (this.isUponOrder) {
+        this.deliveryType = 'scheduled';
+    }
+    this.allowDeliveryDateSelection = false; // Automatically disable date selection for instant
+
+    this.inStock = this.stock > 0 && !this.isUponOrder; // Stock doesn't matter for made-to-order
     this.updatedAt = Date.now(); // Update timestamp
+    next();
+});
+productSchema.pre("validate", function (next) {
+    if (this.deliveryType === "scheduled" && (this.timeRequired == null || this.timeRequired <= 0)) {
+        return next(new Error("Scheduled products must have a valid 'timeRequired' value greater than 0."));
+    }
     next();
 });
 

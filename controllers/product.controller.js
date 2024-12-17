@@ -73,39 +73,39 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
     try {
-      const storeId = req.user._id; // Extract store ID from the token payload
-      const productId = req.params.productId;
-  
-      console.log("Deleting Product with ID:", productId);
-  
-      // Use the service to get the product and verify if it belongs to the store
-      const product = await ProductServices.getProductById(productId);
-      if (!product || product.store.toString() !== storeId.toString()) {
-        return res.status(403).json({ message: "Unauthorized to delete this product" });
-      }
-  
-      // Use the service to delete the product
-      const deletedProduct = await ProductServices.deleteProductById(productId);
-  
-      if (!deletedProduct) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-  
-      // Remove the product reference from the store's products list
-      await ProductServices.removeProductFromStore(storeId, productId);
-  
-      console.log("Product deleted successfully:", deletedProduct);
-      res.status(200).json({ message: "Product deleted successfully" });
+        const storeId = req.user._id; // Extract store ID from the token payload
+        const productId = req.params.productId;
+
+        console.log("Deleting Product with ID:", productId);
+
+        // Use the service to get the product and verify if it belongs to the store
+        const product = await ProductServices.getProductById(productId);
+        if (!product || product.store.toString() !== storeId.toString()) {
+            return res.status(403).json({ message: "Unauthorized to delete this product" });
+        }
+
+        // Use the service to delete the product
+        const deletedProduct = await ProductServices.deleteProductById(productId);
+
+        if (!deletedProduct) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        // Remove the product reference from the store's products list
+        await ProductServices.removeProductFromStore(storeId, productId);
+
+        console.log("Product deleted successfully:", deletedProduct);
+        res.status(200).json({ message: "Product deleted successfully" });
     } catch (error) {
-      console.error("Error deleting product:", error.message);
-      res.status(500).json({ message: error.message });
+        console.error("Error deleting product:", error.message);
+        res.status(500).json({ message: error.message });
     }
-  };
-  exports.getProductsByStoreIdForOwner = async (req, res) => {
+};
+exports.getProductsByStoreIdForOwner = async (req, res) => {
     try {
         console.log('in getProductsByStoreId for OWNER');
-       // const { storeId } = req.query;
-       const storeId = req.user._id;
+        // const { storeId } = req.query;
+        const storeId = req.user._id;
         console.log('storeId: ');
         console.log(storeId);
         // Validate storeId
@@ -158,5 +158,39 @@ exports.getProductsByStoreIdForUsers = async (req, res) => {
             message: 'Failed to fetch products',
             error: err.message,
         });
+    }
+};
+
+// controllers/product.controller.js
+
+exports.reduceQuantity = async (req, res) => {
+    const { productId } = req.params; // Get product ID from route parameters
+    const { quantity } = req.body;   // Get quantity from request body
+
+    try {
+        // Validate productId
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ message: 'Invalid product ID' });
+        }
+
+        // Validate quantity
+        if (!quantity || quantity <= 0) {
+            return res.status(400).json({ message: 'Invalid quantity value' });
+        }
+
+        // Call the service to reduce product quantity
+        const updatedProduct = await ProductServices.reduceProductQuantity(productId, quantity);
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        res.status(200).json({
+            message: 'Product quantity updated successfully',
+            product: updatedProduct,
+        });
+    } catch (error) {
+        console.error('Error reducing product quantity:', error.message);
+        res.status(500).json({ message: 'Error reducing product quantity', error: error.message });
     }
 };

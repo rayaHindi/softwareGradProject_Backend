@@ -1,0 +1,72 @@
+[
+    {
+        "name": "Nablus",
+        "coordinates": {
+            "latitude": 32.22111,
+            "longitude": 35.25444
+        }
+    },
+    {
+        "name": "Ramallah",
+        "coordinates": {
+            "latitude": 31.9038,
+            "longitude": 35.2034
+        }
+    },
+    {
+        "name": "Hebron",
+        "coordinates": {
+            "latitude": 31.5326,
+            "longitude": 35.0998
+        }
+    },
+    {
+        "name": "Jerusalem",
+        "coordinates": {
+            "latitude": 31.7683,
+            "longitude": 35.2137
+        }
+    },
+    {
+        "name": "Jenin",
+        "coordinates": {
+            "latitude": 32.4646,
+            "longitude": 35.2933
+        }
+    },
+    {
+        "name": "Tulkarm",
+        "coordinates": {
+            "latitude": 32.3114,
+            "longitude": 35.0272
+        }
+    },
+    {
+        "name": "Bethlehem",
+        "coordinates": {
+            "latitude": 31.7054,
+            "longitude": 35.1957
+        }
+    },
+    {
+        "name": "Qalqilya",
+        "coordinates": {
+            "latitude": 32.1897,
+            "longitude": 34.9706
+        }
+    },
+    {
+        "name": "Gaza",
+        "coordinates": {
+            "latitude": 31.5036,
+            "longitude": 34.4656
+        }
+    },
+    {
+        "name": "Khan Yunis",
+        "coordinates": {
+            "latitude": 31.3402,
+            "longitude": 34.3063
+        }
+    }
+]

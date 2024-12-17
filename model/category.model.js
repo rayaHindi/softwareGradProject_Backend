@@ -13,6 +13,11 @@ const categorySchema = new Schema({
         type: String,
         trim: true,
     },
+    image: {
+        type: String, // URL of the photo
+        required: false,
+        trim: true,
+    },
     stores: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'store',

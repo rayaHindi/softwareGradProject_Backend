@@ -6,6 +6,11 @@ const { Schema } = mongoose;
 
 // Store schema
 const storeSchema = new Schema({
+    logo: {
+        type: String, // URL of the photo
+        required: false,
+        trim: true,
+    },
     storeName: {
         type: String,
         required: true,
@@ -36,8 +41,26 @@ const storeSchema = new Schema({
         required: true
     },
     city: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'city', // Referencing the City model
         required: true
+    },
+    deliveryCities: {
+        type: [
+            {
+                city: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'city',
+                    required: true,
+                },
+                deliveryCost: {
+                    type: Number,
+                    required: true,
+                    min: 0,
+                },
+            },
+        ],
+        default: [], // Default to an empty array
     },
     dateCreated: {
         type: Date,
@@ -69,6 +92,9 @@ const storeSchema = new Schema({
         cardCode: { type: String, required: false },
         firstName: { type: String, required: false },
         lastName: { type: String, required: false },
+    },
+    rating:{
+
     }
 });
 

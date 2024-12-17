@@ -15,7 +15,7 @@ class ProductServices {
                             `Invalid availableOptions format: '${key}' must have an array of values`
                         );
                     }
-    
+
                     // Ensure each option has an extraCost field, defaulting to 0
                     productData.availableOptions[key] = values.map(option => {
                         if (!option.name) {
@@ -28,7 +28,7 @@ class ProductServices {
                     });
                 }
             }
-    
+
             // Validate and set availableOptionStatus
             if (productData.availableOptionStatus) {
                 if (typeof productData.availableOptionStatus !== "object") {
@@ -36,7 +36,7 @@ class ProductServices {
                         "Invalid availableOptionStatus format: Must be an object with boolean values."
                     );
                 }
-    
+
                 for (const [key, value] of Object.entries(productData.availableOptionStatus)) {
                     if (typeof value !== "boolean") {
                         throw new Error(
@@ -47,12 +47,23 @@ class ProductServices {
             } else {
                 productData.availableOptionStatus = {}; // Default to empty object
             }
-    
+
+            if (productData.deliveryType === 'instant') {
+                productData.allowDeliveryDateSelection = false; // Automatically set to false for "instant" delivery
+            } else if (productData.deliveryType === 'scheduled') {
+                productData.allowDeliveryDateSelection = productData.allowDeliveryDateSelection || false;
+            }
+            
+
+            if (productData.isUponOrder && !productData.timeRequired) {
+                throw new Error('Time required must be specified for made-to-order products');
+            }
+
             // Validate storeId
             if (!mongoose.Types.ObjectId.isValid(storeId)) {
                 throw new Error('Invalid store ID');
             }
-    
+
             // Find the store by its ID
             const store = await StoreModel.findById(storeId);
             if (!store) {
@@ -65,108 +76,111 @@ class ProductServices {
                 store: storeId // Explicitly set the store reference in the product
             });
             await newProduct.save();
-    
+
             // Add the new product to the store's list of products
             store.products.push(newProduct._id);
             await store.save();
-    
+
             return newProduct;
         } catch (err) {
             throw new Error("Error adding product: " + err.message);
         }
     }
-    
-     // Update a product by ID
-static async updateProductById(productId, updateData) {
-    try {
-        // Validate availableOptions format and set default values
-        if (updateData.availableOptions) {
-            for (const [key, values] of Object.entries(updateData.availableOptions)) {
-                if (!Array.isArray(values)) {
-                    throw new Error(
-                        `Invalid availableOptions format: '${key}'`
-                    );
-                }
 
-                // Ensure each option has an extraCost field, defaulting to 0
-                updateData.availableOptions[key] = values.map(option => {
-                    if (!option.name) {
-                        throw new Error(`Each option in '${key}' must have a valid name.`);
+    // Update a product by ID
+    static async updateProductById(productId, updateData) {
+        try {
+            // Validate availableOptions format and set default values
+            if (updateData.availableOptions) {
+                for (const [key, values] of Object.entries(updateData.availableOptions)) {
+                    if (!Array.isArray(values)) {
+                        throw new Error(
+                            `Invalid availableOptions format: '${key}'`
+                        );
                     }
-                    return {
-                        name: option.name.trim(),
-                        extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
-                    };
-                });
-            }
-        }
 
-        // Validate and set availableOptionStatus
-        if (updateData.availableOptionStatus) {
-            if (typeof updateData.availableOptionStatus !== "object") {
-                throw new Error(
-                    "Invalid availableOptionStatus format: Must be an object with boolean values."
-                );
-            }
-
-            for (const [key, value] of Object.entries(updateData.availableOptionStatus)) {
-                if (typeof value !== "boolean") {
-                    throw new Error(
-                        `Invalid value in availableOptionStatus: '${key}' must be true or false.`
-                    );
+                    // Ensure each option has an extraCost field, defaulting to 0
+                    updateData.availableOptions[key] = values.map(option => {
+                        if (!option.name) {
+                            throw new Error(`Each option in '${key}' must have a valid name.`);
+                        }
+                        return {
+                            name: option.name.trim(),
+                            extraCost: Math.max(0, parseFloat(option.extraCost) || 0), // Ensure non-negative
+                        };
+                    });
                 }
             }
-        } else {
-            updateData.availableOptionStatus = {}; // Default to empty object if not provided
+
+            // Validate and set availableOptionStatus
+            if (updateData.availableOptionStatus) {
+                if (typeof updateData.availableOptionStatus !== "object") {
+                    throw new Error(
+                        "Invalid availableOptionStatus format: Must be an object with boolean values."
+                    );
+                }
+
+                for (const [key, value] of Object.entries(updateData.availableOptionStatus)) {
+                    if (typeof value !== "boolean") {
+                        throw new Error(
+                            `Invalid value in availableOptionStatus: '${key}' must be true or false.`
+                        );
+                    }
+                }
+            } else {
+                updateData.availableOptionStatus = {}; // Default to empty object if not provided
+            }
+            if (updateData.deliveryType === 'instant') {
+                updateData.allowDeliveryDateSelection = false; // Automatically reset to false
+            }
+
+            // Perform the update
+            const updatedProduct = await ProductModel.findByIdAndUpdate(
+                productId,
+                updateData,
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedProduct) {
+                throw new Error("Product not found");
+            }
+
+            return updatedProduct;
+        } catch (err) {
+            throw new Error("Error updating product: " + err.message);
         }
-
-        // Perform the update
-        const updatedProduct = await ProductModel.findByIdAndUpdate(
-            productId,
-            updateData,
-            { new: true, runValidators: true }
-        );
-
-        if (!updatedProduct) {
-            throw new Error("Product not found");
-        }
-
-        return updatedProduct;
-    } catch (err) {
-        throw new Error("Error updating product: " + err.message);
     }
-}
 
     // Delete a product by ID
     static async deleteProductById(productId) {
         try {
-          // Log the ID to ensure it's being passed correctly
-          console.log("ProductService: Deleting product with ID:", productId);
-          
-          const deletedProduct = await ProductModel.findByIdAndDelete(productId);
-          return deletedProduct; // Returns the deleted product if it existed, otherwise null
+            // Log the ID to ensure it's being passed correctly
+            console.log("ProductService: Deleting product with ID:", productId);
+
+            const deletedProduct = await ProductModel.findByIdAndDelete(productId);
+            return deletedProduct; // Returns the deleted product if it existed, otherwise null
         } catch (err) {
-          throw new Error("Error deleting product: " + err.message);
+            throw new Error("Error deleting product: " + err.message);
         }
-      }
-    
-    // Remove product reference from store
-static async removeProductFromStore(storeId, productId) {
-    try {
-      const store = await StoreModel.findById(storeId);
-      if (!store) {
-        throw new Error("Store not found");
-      }
-      // Remove the product ID from the store's products list
-      store.products = store.products.filter(
-        (id) => id.toString() !== productId.toString()
-      );
-      await store.save();
-    } catch (err) {
-      throw new Error("Error updating store: " + err.message);
     }
-}
-  
+
+    // Remove product reference from store
+    static async removeProductFromStore(storeId, productId) {
+        try {
+            const store = await StoreModel.findById(storeId);
+            if (!store) {
+                throw new Error("Store not found");
+            }
+            // Remove the product ID from the store's products list
+            store.products = store.products.filter(
+                (id) => id.toString() !== productId.toString()
+            );
+            await store.save();
+        } catch (err) {
+            throw new Error("Error updating store: " + err.message);
+        }
+    }
+
     // Get all products by category
     static async getProductsByCategory(category) {
         try {
@@ -199,12 +213,34 @@ static async removeProductFromStore(storeId, productId) {
         }
     }
 
-     // Get all products
-     static async getAllProducts() {
+    // Get all products
+    static async getAllProducts() {
         try {
             return await ProductModel.find(); // Fetch all products from the database
         } catch (err) {
             throw new Error("Error fetching products: " + err.message);
+        }
+    }
+    static async reduceProductQuantity(productId, quantity) {
+        try {
+            // Fetch the product by ID
+            const product = await ProductModel.findById(productId);
+
+            if (!product) {
+                throw new Error('Product not found');
+            }
+            console.log(`reducing product Id : ${productId}`);
+            console.log(`by quantity: ${quantity}`);
+
+            // Ensure quantity does not go below zero
+            product.stock = Math.max(product.stock - quantity, 0);
+
+            // Save the updated product
+            await product.save();
+
+            return product; // Return the updated product
+        } catch (error) {
+            throw new Error('Error reducing product quantity: ' + error.message);
         }
     }
 
