@@ -4,6 +4,7 @@ const StoreServices = require('../services/store.services.js');
 
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
+const UserModel = require('../model/user.model.js');
 require('dotenv').config(); // Load environment variables
 
 
@@ -43,7 +44,7 @@ exports.register = async (req, res, next) => {
                 message: "User with this email already exists"
             });
         }
-        
+
         // Catch and handle other errors, returning a meaningful error response
         console.error(err);
         res.status(500).json({
@@ -112,7 +113,6 @@ exports.login = async (req, res, next) => {
             if (!user) {
                 return res.status(404).json({ status: false, message: 'User with this email does not exist' });
             }
-
             userType = 'store';
         }
 
@@ -132,8 +132,21 @@ exports.login = async (req, res, next) => {
         console.log('User Type:');
         console.log(userType);
 
-        // Return user type along with the token
-        res.status(200).json({ status: true, success: "sendData", token: token, userType: userType });
+        // Extract first name, last name, and email
+        const userData = {
+            email: user.email,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+        };
+
+        // Return user data, token, and userType
+        res.status(200).json({
+            status: true,
+            success: "sendData",
+            token: token,
+            userType: userType,
+            data: userData
+        });
     } catch (error) {
         console.error('Error during login:', error);
         next(error);
@@ -171,17 +184,17 @@ exports.forgotPassword = async (req, res, next) => {
     try {
         const { email } = req.body; // Get email from request body
         const user = await UserServices.getUserByEmail(email);
-        console.log( `sending email to ${email}`);
+        console.log(`sending email to ${email}`);
 
 
         if (!user) {
-            console.log( `not user`);
+            console.log(`not user`);
             return res.status(404).json({ status: false, message: 'User not found' });
         }
         // Generate a temporary password
         const tempPassword = '5555';//Math.random().toString(36).slice(-8); // Simple random password (8 characters)
         await UserServices.resetUserPassword(user._id, tempPassword)
-        console.log( `temp pass ${tempPassword}`);
+        console.log(`temp pass ${tempPassword}`);
 
         //await user.save(); // Save the updated user to the database
 
@@ -222,7 +235,32 @@ exports.resetPassword = async (req, res, next) => {
         res.status(400).json({ status: false, message: error.message });
     }
 };
+exports.getFullName = async (req, res) => {
+    try {
+        // Assuming the email is sent in the request body or headers
+        const email = req.headers['email'];
 
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        // Fetch the user from the database using the email
+        const user = await UserModel.findOne({ email }).select('firstName lastName');
+        console.log("user info");
+        console.log(user);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Send the user's full name as the response
+        res.json({
+            firstName: user.firstName,
+            lastName: user.lastName,
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
 exports.getPersonalInfo = async (req, res, next) => {
     try {
         const userId = req.user._id; // Extracted from middleware
@@ -300,8 +338,8 @@ exports.addCreditCard = async (req, res, next) => {
         next(error);
     }
 };
-  
-  exports.getCreditCardData = async (req, res) => {
+
+exports.getCreditCardData = async (req, res) => {
     try {
         // The user ID is extracted from the JWT token in middleware
         const userId = req.user._id; // Assuming middleware sets `req.user`

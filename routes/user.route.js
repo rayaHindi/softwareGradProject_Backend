@@ -14,9 +14,10 @@ router.get('/check-email', UserController.checkEmailAvailability);
 
 router.post("/forgotPassword", UserController.forgotPassword);
 router.post("/resetPassword", authenticateToken, UserController.resetPassword);
-router.get("/getPersonalInfo", authenticateToken, UserController.getPersonalInfo); 
+router.get("/getPersonalInfo", authenticateToken, UserController.getPersonalInfo);
 router.post("/updateUserPersonalInfo", authenticateToken, UserController.updateUserPersonalInfo);
 router.post("/addCreditCard", authenticateToken, UserController.addCreditCard);
 router.get("/getCreditCardData", authenticateToken, UserController.getCreditCardData);
 
+router.get("/getFullName", UserController.getFullName);
 module.exports = router;
