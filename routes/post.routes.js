@@ -11,6 +11,7 @@ router.get('', postController.getAllPosts);
 router.post('/:postId/like', postController.addLike); // Add like
 router.post('/:postId/upvote', postController.addUpvote); // Add upvote
 router.post('/:postId/comment', postController.addComment); // Add comment
+router.post('/:postId/downvote', postController.addDownvote);
 
 
 module.exports = router;

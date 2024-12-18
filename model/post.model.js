@@ -17,6 +17,7 @@ const PostSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
     likes: { type: Number, default: 0 }, // Number of likes
     upvotes: { type: Number, default: 0 }, // Number of upvotes
+    downvotes: { type: Number, default: 0 }, // Add downvotes field
     comments: { type: [CommentSchema], default: [] }, // Array of comments
 });
 

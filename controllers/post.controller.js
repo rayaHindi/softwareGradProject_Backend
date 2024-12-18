@@ -80,6 +80,29 @@ exports.addUpvote = async (req, res) => {
         res.status(500).json({ message: 'An error occurred while adding an upvote.' });
     }
 };
+
+// Add Downvote to a post
+exports.addDownvote = async (req, res) => {
+    try {
+        const { postId } = req.params;
+
+        // Find the post and decrement downvotes
+        const post = await Post.findByIdAndUpdate(
+            postId,
+            { $inc: { downvotes: 1 } },
+            { new: true } // Return the updated document
+        );
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        res.status(200).json({ message: 'Downvote added successfully.', downvotes: post.downvotes });
+    } catch (error) {
+        console.error("Error adding downvote:", error);
+        res.status(500).json({ message: 'An error occurred while adding a downvote.' });
+    }
+};
 exports.addComment = async (req, res) => {
     try {
         const { postId } = req.params;
