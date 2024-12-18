@@ -93,9 +93,14 @@ const storeSchema = new Schema({
         firstName: { type: String, required: false },
         lastName: { type: String, required: false },
     },
-    rating:{
-
-    }
+    rating: {
+        type: Number,
+        default: 0, // Default rating
+    },
+    numberOfReceivedOrders: {
+        type: Number,
+        default: 0, // Starts from 0 for a new store
+    },
 });
 
 // Pre-save middleware for hashing the password
