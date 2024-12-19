@@ -7,10 +7,15 @@ exports.placeOrder = async (req, res) => {
     const { items, totalPrice, deliveryDetails } = req.body;
 
     try {
-        // Step 1: Extract unique store IDs from items
+        // Step 1: Validate items and required fields
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Items are required' });
+        }
+
+        // Step 2: Extract unique store IDs from items
         const uniqueStoreIds = [...new Set(items.map((item) => item.storeId.toString()))];
 
-        // Step 2: Increment `numberOfReceivedOrders` for each unique store
+        // Step 3: Increment `numberOfReceivedOrders` for each unique store
         const orderNumbers = {}; // To store the order numbers for each store
         for (const storeId of uniqueStoreIds) {
             const store = await StoreModel.findByIdAndUpdate(
@@ -26,16 +31,38 @@ exports.placeOrder = async (req, res) => {
             orderNumbers[storeId] = store.numberOfReceivedOrders; // Track order number for the store
         }
 
-        // Step 3: Assign the `orderNumbers` field to the order
+        // Step 4: Validate and track store-level totals
+        const storeTotals = {};
+        items.forEach((item) => {
+            const { storeId, storeTotal, storeDeliveryCost } = item;
+
+            // Validate that storeTotal and storeDeliveryCost are provided
+            if (typeof storeTotal !== 'number' || typeof storeDeliveryCost !== 'number') {
+                throw new Error(`Invalid storeTotal or storeDeliveryCost for store ID ${storeId}`);
+            }
+
+            // Aggregate totals for each store
+            if (!storeTotals[storeId]) {
+                storeTotals[storeId] = {
+                    productsTotal: 0,
+                    deliveryCost: storeDeliveryCost,
+                };
+            }
+
+            storeTotals[storeId].productsTotal += storeTotal;
+        });
+
+        // Step 5: Assign the `orderNumbers` and `storeTotals` field to the order
         const orderData = {
             userId,
             items,
             totalPrice,
             deliveryDetails,
             orderNumbers, // Add order numbers to the order
+            storeTotals, // Include aggregated totals for each store
         };
 
-        // Step 4: Create the order in the database
+        // Step 6: Create the order in the database
         const order = new OrderModel(orderData);
         await order.save();
 

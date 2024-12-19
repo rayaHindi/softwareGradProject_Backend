@@ -35,6 +35,14 @@ const orderItemSchema = new Schema({
         type: String, // 'instant' or 'scheduled'
         required: true,
     },
+    storeTotal: {
+        type: Number, // Total for the store
+        required: true,
+    },
+    storeDeliveryCost: {
+        type: Number, // Delivery cost for the store
+        required: true,
+    },
 });
 
 // Order Schema

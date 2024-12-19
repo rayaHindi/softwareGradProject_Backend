@@ -37,39 +37,52 @@ class OrderServices {
             throw new Error('Unable to create order');
         }
     }
-    // Fetch orders by store ID
     static async getOrdersByStoreId(storeId) {
         try {
             const orders = await OrderModel.find({ 'items.storeId': storeId })
-                .populate('userId', 'name email')
-                .populate('items.productId', 'productName');
+                .populate('userId', 'name email') // Populate user details
+                .populate('items.productId', 'name image'); // Populate product details
     
             // Filter and format the orders for the given store
-            return orders.map((order) => {
+            const formattedOrders = orders.map((order) => {
                 const filteredItems = order.items.filter(
                     (item) => item.storeId.toString() === storeId
                 );
     
+                // Ensure orderNumbers is properly converted if it's a Map
+                const orderNumbers = order.orderNumbers instanceof Map
+                    ? Object.fromEntries(order.orderNumbers)
+                    : order.orderNumbers;
+    
                 return {
                     orderId: order._id,
+                    orderNumber: orderNumbers[storeId], // Retrieve the order number for this store
                     userId: order.userId,
                     deliveryDetails: order.deliveryDetails,
                     status: order.status,
                     createdAt: order.createdAt,
-                    items: filteredItems,
+                    items: filteredItems.map((item) => ({
+                        ...item.toObject(),
+                        //productName: item.productId?.productName, // Include product name
+                      //  productImage: item.productId?.image, // Include product image
+                    })),
                     totalPrice: filteredItems.reduce(
                         (sum, item) => sum + item.totalPriceWithQuantity,
                         0
                     ),
-                    orderNumber: order.orderNumbers[storeId], // Retrieve the order number for this store
                 };
             });
+    
+            console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
+            return formattedOrders;
         } catch (error) {
             console.error('Error fetching orders for store:', error.message);
             throw new Error('Failed to fetch orders for the store');
         }
     }
     
+
+
 
     // Fetch orders by user ID
     static async getUserOrders(userId) {
