@@ -67,9 +67,9 @@ const orderSchema = new Schema({
         enum: [
             'Pending',
             //'Confirmed',
-            'In Progress',
+            //'In Progress',
             'Shipped',
-            'Out for Delivery',
+            //'Out for Delivery',
             'Delivered',
             //'Cancelled',
             //'Failed',
