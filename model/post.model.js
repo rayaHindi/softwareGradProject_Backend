@@ -1,3 +1,4 @@
+// post.model.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const db = require('../config/db');
@@ -19,6 +20,11 @@ const PostSchema = new Schema({
     upvotes: { type: Number, default: 0 }, // Number of upvotes
     downvotes: { type: Number, default: 0 }, // Add downvotes field
     comments: { type: [CommentSchema], default: [] }, // Array of comments
+    store: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'store', // Reference to the Store model
+        required: true
+    }
 });
 
 module.exports = db.model('Post', PostSchema);
