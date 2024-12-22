@@ -53,7 +53,15 @@ const userSchema = new Schema({
         cardCode: { type: String, required: false },
         firstName: { type: String, required: false },
         lastName: { type: String, required: false },
-    }
+    },
+    wishlist: {
+        type: [{
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'product'
+        }], // Array of product IDs
+        default: []
+    },
+
 }, { timestamps: true });
 
 userSchema.pre("save", async function () {

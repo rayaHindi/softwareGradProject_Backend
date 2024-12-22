@@ -181,6 +181,58 @@ class UserServices {
             throw error;
         }
     }
+    /*
+        static async addFavoriteStore(userId, storeId) {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $addToSet: { favStores: storeId } }, // Prevent duplicates
+                { new: true }
+            );
+        }
+        static async removeFavoriteStore(userId, storeId) {
+            try {
+                return await UserModel.findByIdAndUpdate(
+                    userId,
+                    { $pull: { favStores: storeId } }, // Use $pull to remove the storeId from the favStores array
+                    { new: true } // Return the updated user document
+                );
+            } catch (error) {
+                throw error;
+            }
+        }
+        */
+
+    static async addToWishlist(userId, productId) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $addToSet: { wishlist: productId } }, // Prevent duplicates
+                { new: true }
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async removeFromWishlist(userId, productId) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $pull: { wishlist: productId } }, // Remove the productId from wishlist
+                { new: true }
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async checkIfInWishlist(userId, productId) {
+        try {
+            const user = await UserModel.findById(userId).select("wishlist");
+            if (!user) throw new Error("User not found");
+            return user.wishlist.includes(productId); // Check if product exists in wishlist
+        } catch (error) {
+            throw error;
+        }
+    }
 
 
 

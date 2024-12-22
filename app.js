@@ -8,6 +8,7 @@ const categoryRoutes = require("./routes/category.routes");
 const cartRoutes = require("./routes/cart.routes");
 const orderRoutes = require("./routes/order.routes");
 const cityRoutes = require("./routes/city.routes");
+const favStoresRoutes = require("./routes/favoriteStores.routes");
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
@@ -21,6 +22,7 @@ app.use('/category', categoryRoutes);
 app.use('/cart', cartRoutes);
 app.use('/order', orderRoutes);
 app.use('/city', cityRoutes);
+app.use("/favoriteStores", favStoresRoutes);
 
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
