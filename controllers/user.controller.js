@@ -132,12 +132,21 @@ exports.login = async (req, res, next) => {
         console.log('User Type:');
         console.log(userType);
 
-        // Extract first name, last name, and email
-        const userData = {
-            email: user.email,
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-        };
+        // Extract data based on userType
+        let responseData;
+        if (userType === 'user') {
+            responseData = {
+                email: user.email,
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+            };
+        } else if (userType === 'store') {
+            responseData = {
+                email: user.email,
+                storeName: user.storeName || '',
+            };
+        }
+
 
         // Return user data, token, and userType
         res.status(200).json({
@@ -145,7 +154,7 @@ exports.login = async (req, res, next) => {
             success: "sendData",
             token: token,
             userType: userType,
-            data: userData
+            data: responseData
         });
     } catch (error) {
         console.error('Error during login:', error);
