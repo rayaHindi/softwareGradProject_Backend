@@ -11,6 +11,9 @@ const cityRoutes = require("./routes/city.routes");
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
+
+const profileRoutes = require("./routes/profile.routes");
+
 const app = express();
 app.use(bodyParser.json())
 
@@ -25,4 +28,8 @@ app.use('/city', cityRoutes);
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);
+
+app.use("/profile", profileRoutes);
+
+
 module.exports = app;
