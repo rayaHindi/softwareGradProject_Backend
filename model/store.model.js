@@ -15,7 +15,7 @@ const storeSchema = new Schema({
         type: String,
         required: true,
         trim: true, // Removes extra whitespace
-       /// unique:true,
+        /// unique:true,
     },
     contactEmail: {
         type: String,
@@ -93,7 +93,13 @@ const storeSchema = new Schema({
         firstName: { type: String, required: false },
         lastName: { type: String, required: false },
     },
-    rating:{
+    bio: {
+        type: String,
+        required: false,
+        default: '', // Default to an empty string
+        trim: true,
+    },
+    rating: {
 
     }
 });
