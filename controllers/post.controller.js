@@ -1,9 +1,9 @@
 const Post = require('../model/post.model');
 
-// Create a new post
+// Create a new post (for users)
 exports.createPost = async (req, res) => {
     try {
-        console.log("im inside here");
+        console.log("im inside user post creation");
         const { firstName, lastName, email, content, images } = req.body;
 
         // Validate input
@@ -15,11 +15,10 @@ exports.createPost = async (req, res) => {
         if (images && !Array.isArray(images)) {
             return res.status(400).json({ message: 'Images must be an array of URLs.' });
         }
-
+        fullName = firstName + lastName;
         // Create and save post
         const newPost = new Post({
-            firstName,
-            lastName,
+            fullName,
             email,
             content,
             images, // Include the images array
@@ -38,6 +37,46 @@ exports.createPost = async (req, res) => {
         });
     }
 };
+
+// Create a new post (for stores)
+exports.createStorePost = async (req, res) => {
+    try {
+        console.log("im inside store post creation");
+        const { fullName, email, content, images } = req.body;
+
+        // Validate input
+        if (!fullName || !content) {
+
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        // Validate images
+        if (images && !Array.isArray(images)) {
+            return res.status(400).json({ message: 'Images must be an array of URLs.' });
+        }
+
+        // Create and save post for store
+        const newPost = new Post({
+            fullName,
+            email,
+            content,
+            images, // Include the images array
+        });
+
+        await newPost.save();
+
+        res.status(201).json({
+            message: 'Store post successfully created',
+            post: newPost,
+        });
+    } catch (error) {
+        console.error("Error creating store post:", error);
+        res.status(500).json({
+            message: 'An error occurred while creating the store post.',
+        });
+    }
+};
+
 exports.addLike = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -59,6 +98,7 @@ exports.addLike = async (req, res) => {
         res.status(500).json({ message: 'An error occurred while adding a like.' });
     }
 };
+
 exports.addUpvote = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -103,6 +143,7 @@ exports.addDownvote = async (req, res) => {
         res.status(500).json({ message: 'An error occurred while adding a downvote.' });
     }
 };
+
 exports.addComment = async (req, res) => {
     try {
         const { postId } = req.params;

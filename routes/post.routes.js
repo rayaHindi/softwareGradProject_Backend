@@ -3,7 +3,9 @@ const router = express.Router();
 const postController = require('../controllers/post.controller');
 
 // Route to create a new post
-router.post('', postController.createPost);
+router.post('/userCreate', postController.createPost);
+router.post('/storeCreate', postController.createStorePost);
+
 
 // Optional route to fetch all posts
 router.get('', postController.getAllPosts);

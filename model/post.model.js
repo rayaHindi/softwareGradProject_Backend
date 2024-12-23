@@ -10,8 +10,7 @@ const CommentSchema = new Schema({
 });
 
 const PostSchema = new Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
+    fullName: { type: String, required: true },
     email: { type: String, required: false },
     content: { type: String, required: true },
     images: { type: [String], default: [] }, // Array of image URLs
@@ -20,11 +19,7 @@ const PostSchema = new Schema({
     upvotes: { type: Number, default: 0 }, // Number of upvotes
     downvotes: { type: Number, default: 0 }, // Add downvotes field
     comments: { type: [CommentSchema], default: [] }, // Array of comments
-    store: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'store', // Reference to the Store model
-        required: true
-    }
+
 });
 
 module.exports = db.model('Post', PostSchema);
