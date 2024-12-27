@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/post.controller');
+const authenticateToken = require('../middleware/authMiddleware');
 
 // Route to create a new post
-router.post('/userCreate', postController.createPost);
-router.post('/storeCreate', postController.createStorePost);
+router.post('/userCreate', authenticateToken, postController.createPost);
+router.post('/storeCreate', authenticateToken, postController.createStorePost);
 
 
 // Optional route to fetch all posts

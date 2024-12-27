@@ -19,6 +19,21 @@ const PostSchema = new Schema({
     upvotes: { type: Number, default: 0 }, // Number of upvotes
     downvotes: { type: Number, default: 0 }, // Add downvotes field
     comments: { type: [CommentSchema], default: [] }, // Array of comments
+    store_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'store',
+        required: false,
+    },
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+        required: false,
+    },
+    post_type: {
+        type: String,
+        enum: ['P', 'F'], //P for store post,F for feedback
+        required: true,
+    }
 
 });
 

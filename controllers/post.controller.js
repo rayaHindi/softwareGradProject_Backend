@@ -4,7 +4,8 @@ const Post = require('../model/post.model');
 exports.createPost = async (req, res) => {
     try {
         console.log("im inside user post creation");
-        const { firstName, lastName, email, content, images } = req.body;
+        const { firstName, lastName, email, content, images, store_id } = req.body;
+        const user_id = req.user._id;
 
         // Validate input
         if (!firstName || !lastName || !content) {
@@ -16,12 +17,16 @@ exports.createPost = async (req, res) => {
             return res.status(400).json({ message: 'Images must be an array of URLs.' });
         }
         fullName = firstName + lastName;
+        post_type = 'F';
         // Create and save post
         const newPost = new Post({
             fullName,
             email,
             content,
             images, // Include the images array
+            post_type,
+            store_id,
+            user_id,
         });
 
         await newPost.save();
@@ -43,6 +48,7 @@ exports.createStorePost = async (req, res) => {
     try {
         console.log("im inside store post creation");
         const { fullName, email, content, images } = req.body;
+        const store_id = req.user._id;
 
         // Validate input
         if (!fullName || !content) {
@@ -54,6 +60,7 @@ exports.createStorePost = async (req, res) => {
         if (images && !Array.isArray(images)) {
             return res.status(400).json({ message: 'Images must be an array of URLs.' });
         }
+        post_type = 'P';
 
         // Create and save post for store
         const newPost = new Post({
@@ -61,6 +68,8 @@ exports.createStorePost = async (req, res) => {
             email,
             content,
             images, // Include the images array
+            post_type,
+            store_id,
         });
 
         await newPost.save();
