@@ -61,7 +61,7 @@ const productSchema = new Schema({
     allowDeliveryDateSelection: {/////////////////////new/////////////
         type: Boolean,
         default: false, // Default to false
-    }, 
+    },
     tags: {
         type: [String],
         default: [], // Empty array by default //["vegan", "gluten-free", "organic"]
@@ -88,6 +88,11 @@ const productSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    searchCount: {
+        type: Number,
+        default: 0,
+    }
+
 });
 
 productSchema.pre("save", function (next) {

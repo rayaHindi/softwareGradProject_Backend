@@ -97,6 +97,8 @@ class CategoryServices {
                 contactEmail: store.contactEmail,
                 phoneNumber: store.phoneNumber,
                 logo: store.logo,
+                city: store.city,
+                deliveryCities: store.deliveryCities,
             }));
         } catch (error) {
             console.error('Error fetching stores by category:', error);

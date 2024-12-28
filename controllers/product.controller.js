@@ -1,4 +1,6 @@
 const ProductServices = require('../services/product.services.js');
+const StoreServices = require('../services/store.services.js'); // You may create this if needed
+
 const mongoose = require('mongoose');
 
 exports.addNewProduct = async (req, res) => {
@@ -27,7 +29,7 @@ exports.getAllProducts = async (req, res) => {
     try {
         // Fetch all products using the service
         const products = await ProductServices.getAllProducts();
-        console.log("Products returned successfully:", products);
+        //console.log("Products returned successfully:", products);
         // Send the products back as a JSON response
         res.status(200).json(products);
     } catch (error) {
@@ -192,5 +194,51 @@ exports.reduceQuantity = async (req, res) => {
     } catch (error) {
         console.error('Error reducing product quantity:', error.message);
         res.status(500).json({ message: 'Error reducing product quantity', error: error.message });
+    }
+};
+exports.getMostSearched = async (req, res) => {
+    try {
+        // Fetch most searched products and stores
+        const topProducts = await ProductServices.getMostSearchedProducts();
+        const topStores = await StoreServices.getMostSearchedStores();
+
+        res.status(200).json({
+            success: true,
+            stores: topStores,
+            products: topProducts,
+            
+        });
+    } catch (error) {
+        console.error('Error fetching most searched items:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.incrementSearchCount = async (req, res) => {
+    try {
+        const { id, type } = req.body;
+
+        if (!id || !type) {
+            return res.status(400).json({ success: false, message: 'Invalid parameters' });
+        }
+
+        if (type === 'product') {
+            await ProductServices.incrementProductSearchCount(id);
+        } else if (type === 'store') {
+            await StoreServices.incrementStoreSearchCount(id);
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid type parameter' });
+        }
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('Error incrementing search count:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
 };

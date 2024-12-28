@@ -69,24 +69,24 @@ class StoreService {
     static async getDeliveryCities(storeId) {
         try {
             const store = await StoreModel.findById(storeId).populate('deliveryCities.city', 'name'); // Populate city name
-    
+
             if (!store) {
                 throw new Error('Store not found');
             }
-    
+
             // Map the delivery cities to include city name and delivery cost
             const formattedDeliveryCities = store.deliveryCities.map((entry) => ({
                 cityName: entry.city.name, // City name from the populated city field
                 cityId: entry.city._id,   // City ID
                 deliveryCost: entry.deliveryCost, // Delivery cost
             }));
-    
+
             return formattedDeliveryCities; // Return the formatted list
         } catch (err) {
             throw new Error('Error fetching delivery cities: ' + err.message);
         }
     }
-    
+
     static async updateDeliveryCities(storeId, deliveryCities) {
         try {
             // Update the deliveryCities field for the given store
@@ -95,19 +95,49 @@ class StoreService {
                 { deliveryCities },
                 { new: true, runValidators: true }
             );
-    
+
             if (!updatedStore) {
                 throw new Error('Store not found');
             }
-    
+
             return updatedStore.deliveryCities; // Return the updated delivery cities
         } catch (err) {
             throw new Error('Error updating delivery cities: ' + err.message);
         }
     }
-    
-    
-    
+    static async getAllStores() {
+        try {
+            const stores = await StoreModel.find();
+            return stores;
+
+        } catch (err) {
+            throw new Error('Error fetching stores: ' + err.message);
+        }
+    }
+    static async getMostSearchedStores(limit = 3) {
+        try {
+            return await StoreModel.find()
+                .sort({ searchCount: -1 }) // Sort by descending search count
+                .limit(limit); // Fetch top `limit` results
+        } catch (error) {
+            throw new Error('Error fetching most searched stores: ' + error.message);
+        }
+    }
+
+    static async incrementStoreSearchCount(storeId) {
+        try {
+            // Increment the search count for a store by its ID
+            await StoreModel.findByIdAndUpdate(
+                storeId,
+                { $inc: { searchCount: 1 } },
+                { new: true }
+            );
+        } catch (error) {
+            throw new Error('Error incrementing store search count: ' + error.message);
+        }
+    }
+
+
 }
 
 module.exports = StoreService;

@@ -53,7 +53,7 @@ class ProductServices {
             } else if (productData.deliveryType === 'scheduled') {
                 productData.allowDeliveryDateSelection = productData.allowDeliveryDateSelection || false;
             }
-            
+
 
             if (productData.isUponOrder && !productData.timeRequired) {
                 throw new Error('Time required must be specified for made-to-order products');
@@ -243,6 +243,29 @@ class ProductServices {
             throw new Error('Error reducing product quantity: ' + error.message);
         }
     }
+    static async getMostSearchedProducts(limit = 3) {
+        try {
+            return await ProductModel.find()
+                .sort({ searchCount: -1 }) // Sort by descending search count
+                .limit(limit); // Fetch top `limit` results
+        } catch (error) {
+            throw new Error('Error fetching most searched products: ' + error.message);
+        }
+    }
+
+    static async incrementProductSearchCount(productId) {
+        try {
+            // Increment the search count for a product by its ID
+            await ProductModel.findByIdAndUpdate(
+                productId,
+                { $inc: { searchCount: 1 } },
+                { new: true }
+            );
+        } catch (error) {
+            throw new Error('Error incrementing product search count: ' + error.message);
+        }
+    }
+
 
 }
 

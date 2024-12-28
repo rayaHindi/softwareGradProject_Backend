@@ -15,7 +15,7 @@ const storeSchema = new Schema({
         type: String,
         required: true,
         trim: true, // Removes extra whitespace
-       /// unique:true,
+        /// unique:true,
     },
     contactEmail: {
         type: String,
@@ -101,6 +101,11 @@ const storeSchema = new Schema({
         type: Number,
         default: 0, // Starts from 0 for a new store
     },
+    searchCount: {
+        type: Number,
+        default: 0,
+    }
+
 });
 
 // Pre-save middleware for hashing the password

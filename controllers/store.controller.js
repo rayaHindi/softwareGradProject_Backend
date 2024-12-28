@@ -196,3 +196,14 @@ exports.getStoresByCity = async (req, res) => {
     }
 };
 */
+
+exports.getAllStores = async (req, res) => {
+    try {
+        const stores = await storeService.getAllStores();
+        console.log("Stores returned successfully:", stores);
+
+        res.status(200).json({ status: true, stores });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};

@@ -20,4 +20,7 @@ router.get('/getDelivery-citiesByID/:storeId', StoreController.getDeliveryCities
 // Route to update delivery cities
 router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateDeliveryCities);
 
+router.get('/getAllStores',StoreController.getAllStores);
+
+
 module.exports = router;
