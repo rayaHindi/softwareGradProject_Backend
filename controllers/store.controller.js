@@ -4,7 +4,7 @@ const storeService = require('../services/store.services');
 const categoryModel = require('../model/category.model'); // Import Category Model
 const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
-
+const StoreModel = require('../model/store.model');
 exports.register = async (req, res) => {
     try {
         const {
@@ -85,7 +85,7 @@ exports.getStoreDetails = async (req, res) => {
             phoneNumber: store.phoneNumber,
             city: store.city?.name, // Include city
             category: store.category?.name,
-            logo:store.logo,
+            logo: store.logo,
 
         });
     } catch (error) {
@@ -182,6 +182,50 @@ exports.updateDeliveryCities = async (req, res) => {
             status: false,
             message: error.message,
         });
+    }
+};
+
+exports.fetchProfileInfo = async (req, res) => {
+    const id = req.params.storeID;
+    console.log("store id:");
+    console.log(id);
+    try {
+        // Find the store by ID
+        const store = await StoreModel.findById(id)
+            .populate('city', 'name') // Populate city field with its name
+            .populate('category', 'name') // Populate category field with its name
+            .populate('products', 'name price image') // Populate products with necessary details
+            .populate('deliveryCities.city', 'name'); // Populate deliveryCities.city with its name
+        console.log("store infirmatiopn:");
+        console.log(store);
+        if (!store) {
+            console.log("store is not found");
+            return res.status(404).json({ error: 'Store not found' });
+        } else console.log("store is founddddddddddddddd");
+
+        // Construct the profile data response
+        const profileData = {
+            storeName: store.storeName,
+            bio: store.bio || "No Bio",
+            profilePicture: store.logo || 'https://via.placeholder.com/100',
+            productsCount: store.products.length,
+            deliveryCities: store.deliveryCities.map(city => ({
+                cityName: city.city.name,
+                deliveryCost: city.deliveryCost
+            })),
+            allowSpecialOrders: store.allowSpecialOrders,
+            specialOrdersCount: store.specialOrders.length,
+            contactEmail: store.contactEmail,
+            phoneNumber: store.phoneNumber,
+            city: store.city.name,
+            category: store.category.name,
+            dateCreated: store.dateCreated
+        };
+
+        res.status(200).json(profileData);
+    } catch (error) {
+        console.error("Error fetching store profile:", error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 /*
