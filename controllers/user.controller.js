@@ -85,7 +85,16 @@ exports.checkEmailAvailability = async (req, res) => {
         });
     }
 };
+exports.getUserId = (req, res) => {
+    // Access the user ID attached by the middleware
+    const userId = req.user._id;
 
+    if (!userId) {
+        return res.status(404).json({ message: 'User ID not found in token' });
+    }
+
+    res.json({ userId });
+};
 exports.login = async (req, res, next) => {
     try {
         console.log('in login');
