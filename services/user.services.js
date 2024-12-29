@@ -234,6 +234,20 @@ class UserServices {
         }
     }
 
+    static async getWishList(userId) {
+        try {
+            const user = await UserModel.findById(userId).populate({
+                path: 'wishlist',
+                model: 'product',
+            });
+
+            if (!user) throw new Error("User not found");
+
+            return user.wishlist.flat(); // Return the populated wishlist
+        } catch (error) {
+            throw error;
+        }
+    }
 
 
 }

@@ -43,6 +43,11 @@ const orderItemSchema = new Schema({
         type: Number, // Delivery cost for the store
         required: true,
     },
+    storeStatus: {
+        type: String,
+        enum: ['Pending', 'Shipped', 'Delivered'],
+        default: 'Pending', // Default status for each store
+    },
 });
 
 // Order Schema
@@ -66,6 +71,7 @@ const orderSchema = new Schema({
         type: String,
         enum: [
             'Pending',
+            'Partially Shipped',
             //'Confirmed',
             //'In Progress',
             'Shipped',
@@ -82,6 +88,10 @@ const orderSchema = new Schema({
         type: Map,
         of: Number,
         required: true, // Ensure it's always set
+    },
+    userOrderNumber: {
+        type: Number, // Store user's order number
+        required: true,
     },
     createdAt: {
         type: Date,

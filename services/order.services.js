@@ -87,14 +87,33 @@ class OrderServices {
     // Fetch orders by user ID
     static async getUserOrders(userId) {
         try {
-            return await OrderModel.find({ userId })
-                .populate('items.productId', 'name image') // Populate product details
-                .populate('items.storeId', 'storeName'); // Populate store details
+            const orders = await OrderModel.find({ userId })
+                .populate('items.productId', 'name image')
+                .populate('items.storeId', 'storeName logo');
+    
+            // Ensure `storeId` keys are serialized properly as JSON-compatible objects
+            for (const order of orders) {
+                for (const item of order.items) {
+                    if (item.storeId) {
+                        // Correctly serialize as JSON-compatible structure
+                        item.storeId = {
+                            _id: item.storeId._id.toString(),
+                            storeName: item.storeId.storeName,
+                            logo: item.storeId.logo,
+                        };
+                    }
+                }
+            }
+            console.log(orders);
+    
+            return orders;
         } catch (error) {
             console.error('Error fetching user orders:', error);
             throw new Error('Failed to fetch user orders');
         }
     }
+    
+    
 
     // Update order status
     static async updateOrderStatus(orderId, status) {

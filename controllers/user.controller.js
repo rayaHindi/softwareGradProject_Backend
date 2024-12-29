@@ -450,3 +450,15 @@ exports.checkIfInWishlist = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to check wishlist" });
     }
 };
+exports.getWishList = async (req, res) => {
+    console.log("Fetching user's wishlist");
+    const userId = req.user._id;
+
+    try {
+        const wishlistProducts = await UserServices.getWishList(userId);
+        res.status(200).json({ success: true, products: wishlistProducts });
+    } catch (error) {
+        console.error("Error fetching wishlist:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch wishlist" });
+    }
+};

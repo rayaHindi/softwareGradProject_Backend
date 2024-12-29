@@ -61,6 +61,11 @@ const userSchema = new Schema({
         }], // Array of product IDs
         default: []
     },
+    numberOfOrders: {
+        type: Number,
+        default: 0, // Start with 0 orders
+        required: true
+    },
 
 }, { timestamps: true });
 

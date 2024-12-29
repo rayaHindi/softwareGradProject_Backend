@@ -1,6 +1,7 @@
 const OrderServices = require('../services/order.services');
 const StoreModel = require('../model/store.model');
 const OrderModel = require('../model/order.model');
+const UserModel = require('../model/user.model'); // Import the User model
 
 exports.placeOrder = async (req, res) => {
     const userId = req.user._id; // Extracted from authentication middleware
@@ -31,7 +32,20 @@ exports.placeOrder = async (req, res) => {
             orderNumbers[storeId] = store.numberOfReceivedOrders; // Track order number for the store
         }
 
-        // Step 4: Validate and track store-level totals
+        // Step 4: Increment `numberOfOrders` for the user
+        const user = await UserModel.findByIdAndUpdate(
+            userId,
+            { $inc: { numberOfOrders: 1 } }, // Increment the user's order count
+            { new: true }
+        );
+
+        if (!user) {
+            throw new Error(`User with ID ${userId} not found`);
+        }
+
+        const userOrderNumber = user.numberOfOrders; // Get the current order number for the user
+
+        // Step 5: Validate and track store-level totals
         const storeTotals = {};
         items.forEach((item) => {
             const { storeId, storeTotal, storeDeliveryCost } = item;
@@ -52,17 +66,18 @@ exports.placeOrder = async (req, res) => {
             storeTotals[storeId].productsTotal += storeTotal;
         });
 
-        // Step 5: Assign the `orderNumbers` and `storeTotals` field to the order
+        // Step 6: Assign the `orderNumbers` and `storeTotals` field to the order
         const orderData = {
             userId,
             items,
             totalPrice,
             deliveryDetails,
-            orderNumbers, // Add order numbers to the order
+            orderNumbers, // Add order numbers for each store
+            userOrderNumber, // Include the user's order number
             storeTotals, // Include aggregated totals for each store
         };
 
-        // Step 6: Create the order in the database
+        // Step 7: Create the order in the database
         const order = new OrderModel(orderData);
         await order.save();
 
@@ -72,10 +87,6 @@ exports.placeOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to place order' });
     }
 };
-
-
-
-
 
 exports.getOrdersByStoreId = async (req, res) => {
     const storeId = req.user._id;

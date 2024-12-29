@@ -27,6 +27,7 @@ router.get("/getCreditCardData", authenticateToken, UserController.getCreditCard
 router.post('/wishlist/:productId', authenticateToken, UserController.addToWishlist);
 router.delete('/wishlist/:productId', authenticateToken, UserController.removeFromWishlist);
 router.get("/wishlist/checkIfExist/:productId", authenticateToken, UserController.checkIfInWishlist);
+router.get("/wishlist/getList", authenticateToken, UserController.getWishList);
 
 router.get("/getFullName", UserController.getFullName);
 module.exports = router;
