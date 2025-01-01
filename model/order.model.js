@@ -47,6 +47,23 @@ const orderItemSchema = new Schema({
         type: String,
         enum: ['Pending', 'Shipped', 'Delivered'],
         default: 'Pending', // Default status for each store
+        required: true,
+    },
+    timePickingAllowed: {
+        type: Boolean,
+        default: false, // Default to false if not specified
+    },
+    selectedDate: {
+        type: Date,
+        required: function () {
+            return this.deliveryType === 'scheduled' && this.timePickingAllowed;
+        }, // Required only if `timePickingAllowed` is true
+    },
+    selectedTime: {
+        type: String, // You can use 'String' or a specific format like 'HH:mm'
+        required: function () {
+            return this.deliveryType === 'scheduled' && this.timePickingAllowed;
+        }, // Required only if `timePickingAllowed` is true
     },
 });
 
@@ -92,6 +109,17 @@ const orderSchema = new Schema({
     userOrderNumber: {
         type: Number, // Store user's order number
         required: true,
+    },
+    deliveryPreference: {
+        type: String,
+        enum: ['Deliver All Together', 'Deliver When Ready'], // Allowed options
+        required: true, // Make it mandatory to ensure the preference is always provided
+    },
+    orderDeliveryType: {
+        type: String,
+        enum: ['instant', 'scheduled'], // Allowed values
+        required: true, // Make it mandatory
+        default: 'instant',
     },
     createdAt: {
         type: Date,

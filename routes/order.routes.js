@@ -12,7 +12,8 @@ router.get('/getOrdersByStoreId', authMiddleware, orderController.getOrdersBySto
 router.get('/getUserOrders', authMiddleware, orderController.getUserOrders);
 
 // Update order status
-router.put('/:orderId/updateStatus', authMiddleware, orderController.updateOrderStatus);
+router.put('/:orderId/updateOrderStatus', authMiddleware, orderController.updateOrderStatus);
 
+router.patch('/updateItemStatus/:orderId',authMiddleware, orderController.updateItemStatus);
 
 module.exports = router;

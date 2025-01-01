@@ -42,29 +42,32 @@ class OrderServices {
             const orders = await OrderModel.find({ 'items.storeId': storeId })
                 .populate('userId', 'name email') // Populate user details
                 .populate('items.productId', 'name image'); // Populate product details
-    
+
             // Filter and format the orders for the given store
             const formattedOrders = orders.map((order) => {
                 const filteredItems = order.items.filter(
                     (item) => item.storeId.toString() === storeId
                 );
-    
+
                 // Ensure orderNumbers is properly converted if it's a Map
                 const orderNumbers = order.orderNumbers instanceof Map
                     ? Object.fromEntries(order.orderNumbers)
                     : order.orderNumbers;
-    
+                const storeStatus = filteredItems[0]?.storeStatus || 'Pending';
+
                 return {
                     orderId: order._id,
                     orderNumber: orderNumbers[storeId], // Retrieve the order number for this store
                     userId: order.userId,
                     deliveryDetails: order.deliveryDetails,
-                    status: order.status,
+                    status: order.status, // Overall order status
+                    storeStatus,
+                    orderDeliveryType: order.orderDeliveryType,
                     createdAt: order.createdAt,
                     items: filteredItems.map((item) => ({
                         ...item.toObject(),
                         //productName: item.productId?.productName, // Include product name
-                      //  productImage: item.productId?.image, // Include product image
+                        //  productImage: item.productId?.image, // Include product image
                     })),
                     totalPrice: filteredItems.reduce(
                         (sum, item) => sum + item.totalPriceWithQuantity,
@@ -72,7 +75,7 @@ class OrderServices {
                     ),
                 };
             });
-    
+
             console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
             return formattedOrders;
         } catch (error) {
@@ -80,7 +83,7 @@ class OrderServices {
             throw new Error('Failed to fetch orders for the store');
         }
     }
-    
+
 
 
 
@@ -90,7 +93,7 @@ class OrderServices {
             const orders = await OrderModel.find({ userId })
                 .populate('items.productId', 'name image')
                 .populate('items.storeId', 'storeName logo');
-    
+
             // Ensure `storeId` keys are serialized properly as JSON-compatible objects
             for (const order of orders) {
                 for (const item of order.items) {
@@ -105,15 +108,15 @@ class OrderServices {
                 }
             }
             console.log(orders);
-    
+
             return orders;
         } catch (error) {
             console.error('Error fetching user orders:', error);
             throw new Error('Failed to fetch user orders');
         }
     }
-    
-    
+
+
 
     // Update order status
     static async updateOrderStatus(orderId, status) {
@@ -128,6 +131,58 @@ class OrderServices {
             throw new Error('Failed to update order status');
         }
     }
+    
+    // Update item status for specific store
+    static async updateItemStatus(orderId, storeId, newStatus) {
+        try {
+            const order = await OrderModel.findById(orderId);
+            console.log(`newStatus ${newStatus}`);
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            const validStatuses = ['Pending', 'Shipped', 'Delivered'];
+            if (!validStatuses.includes(newStatus)) {
+                throw new Error(`Invalid storeStatus value: ${newStatus}`);
+            }
+
+            let isUpdated = false;
+
+            // Update status of items for the given store
+            order.items.forEach((item) => {
+                console.log('Item storeId:', item.storeId.toString());
+                console.log('Provided storeId:', storeId);
+                if (item.storeId.toString() === storeId) {
+                    item.storeStatus = newStatus;
+                    console.log('Updated storeStatus:', item.storeStatus);
+                    isUpdated = true;
+                }
+            });
+
+
+            if (!isUpdated) {
+                throw new Error('No items found for the specified store');
+            }
+
+            // Check overall status based on all items
+            const allStatuses = order.items.map((item) => item.storeStatus);
+
+            if (allStatuses.every((status) => status === 'Shipped')) {
+                order.status = 'Shipped';
+            } else if (allStatuses.every((status) => status === 'Delivered')) {
+                order.status = 'Delivered';
+            } else {
+                order.status = 'Partially Shipped';
+            }
+
+            await order.save();
+            return order;
+        } catch (error) {
+            console.error('Error updating item status:', error);
+            throw new Error('Failed to update item status');
+        }
+    }
+
 }
 
 module.exports = OrderServices;
