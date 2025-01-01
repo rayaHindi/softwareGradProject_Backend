@@ -6,8 +6,8 @@ const authenticateToken = require('../middleware/authMiddleware');
 // Route to create a new post
 router.post('/userCreate', authenticateToken, postController.createPost);
 router.post('/storeCreate', authenticateToken, postController.createStorePost);
-
-
+//route to fetch specific posts
+router.get('/fetchAccountPosts/:userID', postController.getAccountPosts);
 // Optional route to fetch all posts
 router.get('', postController.getAllPosts);
 

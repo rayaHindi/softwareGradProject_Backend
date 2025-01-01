@@ -191,3 +191,32 @@ exports.getAllPosts = async (req, res) => {
         res.status(500).json({ message: 'An error occurred while fetching posts.' });
     }
 };
+
+exports.getAccountPosts = async (req, res) => {
+    try {
+        console.log("Inside account fetch");
+        const accountId = req.params.userID;
+
+        if (!accountId) {
+            return res.status(400).json({ error: "User ID is required" });
+        }
+
+        // Fetch posts associated with the user_id or store_id
+        const posts = await Post.find({
+            $or: [
+                { user_id: accountId },
+                { store_id: accountId }
+            ]
+        }).sort({ createdAt: -1 }); // Optional: Sort by creation date, latest first
+
+        // Check if posts exist
+        if (!posts || posts.length === 0) {
+            return res.status(404).json({ message: "No posts found for this account" });
+        }
+
+        res.status(200).json(posts);
+    } catch (error) {
+        console.error("Error fetching account posts:", error);
+        res.status(500).json({ error: "An error occurred while fetching posts" });
+    }
+};
