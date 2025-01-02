@@ -6,9 +6,10 @@ exports.createPost = async (req, res) => {
         console.log("im inside user post creation");
         const { firstName, lastName, email, content, images, store_id } = req.body;
         const user_id = req.user._id;
-
+        console.log("this is the store id:");
+        console.log(store_id);
         // Validate input
-        if (!firstName || !lastName || !content) {
+        if (!firstName || !lastName || !content || !store_id) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
