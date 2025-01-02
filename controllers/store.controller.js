@@ -72,21 +72,22 @@ exports.register = async (req, res) => {
         });
     }
 };
-
 exports.getStoreDetails = async (req, res) => {
     try {
         const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
         const store = await storeService.getStoreDetails(storeId);
+
+        // Log the city name for debugging
+        console.log(`store.city?.name: ${store.city?.name}`);
 
         res.status(200).json({
             status: true,
             storeName: store.storeName,
             contactEmail: store.contactEmail,
             phoneNumber: store.phoneNumber,
-            city: store.city?.name, // Include city
-            category: store.category?.name,
-            logo:store.logo,
-
+            city: store.city?.name, // Include city name
+            category: store.category?.name, // Include category name if populated
+            logo: store.logo,
         });
     } catch (error) {
         res.status(500).json({
@@ -95,6 +96,7 @@ exports.getStoreDetails = async (req, res) => {
         });
     }
 };
+
 exports.getDeliveryCities = async (req, res) => {
     try {
         const storeId = req.user._id; // Assuming middleware sets req.user with the store ID

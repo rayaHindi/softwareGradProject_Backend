@@ -57,7 +57,7 @@ class StoreService {
     }
     static async getStoreDetails(storeId) {
         try {
-            const store = await StoreModel.findById(storeId);
+            const store = await StoreModel.findById(storeId).populate('city', 'name'); // Populate the city reference
             if (!store) {
                 throw new Error('Store not found');
             }
@@ -66,6 +66,7 @@ class StoreService {
             throw new Error('Error fetching store details: ' + error.message);
         }
     }
+    
     static async getDeliveryCities(storeId) {
         try {
             const store = await StoreModel.findById(storeId).populate('deliveryCities.city', 'name'); // Populate city name

@@ -9,6 +9,7 @@ const cartRoutes = require("./routes/cart.routes");
 const orderRoutes = require("./routes/order.routes");
 const cityRoutes = require("./routes/city.routes");
 const favStoresRoutes = require("./routes/favoriteStores.routes");
+const advertisementRoutes = require("./routes/advertisement.routes");
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
@@ -23,8 +24,12 @@ app.use('/cart', cartRoutes);
 app.use('/order', orderRoutes);
 app.use('/city', cityRoutes);
 app.use("/favoriteStores", favStoresRoutes);
+app.use("/advertisement", advertisementRoutes);
 
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);
+
+require('./tasks/expireAdvertisements');
+
 module.exports = app;
