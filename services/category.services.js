@@ -61,6 +61,7 @@ class CategoryServices {
             categories.forEach(category => {
                 result[category.name] = category.stores.map(store => ({
                     storeName: store.storeName,
+                    logo: store.logo,
                     contactEmail: store.contactEmail,
                     phoneNumber: store.phoneNumber,
                 }));

@@ -2,7 +2,7 @@ const OrderServices = require('../services/order.services');
 const StoreModel = require('../model/store.model');
 const OrderModel = require('../model/order.model');
 const UserModel = require('../model/user.model'); // Import the User model
-
+const ProductModel = require('../model/product.model');
 exports.placeOrder = async (req, res) => {
     const userId = req.user._id; // Extracted from authentication middleware
     const { items, totalPrice, deliveryDetails, deliveryPreference } = req.body;
@@ -36,6 +36,23 @@ exports.placeOrder = async (req, res) => {
 
         // Step 2: Extract unique store IDs from items
         const uniqueStoreIds = [...new Set(items.map((item) => item.storeId.toString()))];
+        console.log(`in placing order uniqueStoreIds: ${uniqueStoreIds}`);
+
+        // Step 2.5: Increment salesCount for each product in the items
+        for (const item of items) {
+            const { productId, quantity } = item;
+
+            // Increment salesCount by the quantity of the product in the order
+            const product = await ProductModel.findByIdAndUpdate(
+                productId,
+                { $inc: { salesCount: quantity } },
+                { new: true }
+            );
+
+            if (!product) {
+                throw new Error(`Product with ID ${productId} not found`);
+            }
+        }
 
         // Step 3: Increment `numberOfReceivedOrders` for each unique store
         const orderNumbers = {}; // To store the order numbers for each store

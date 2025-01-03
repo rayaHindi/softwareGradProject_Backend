@@ -5,8 +5,8 @@ class AdvertisementService {
         try {
             // Check if the store already has an active ad
             const activeAds = await AdvertisementModel.find({ storeId, status: 'Active' });
-            if (activeAds.length >= 1) {
-                throw new Error('You already have an active advertisement.');
+            if (activeAds.length > 2) {
+                throw new Error('You already have 2 active advertisement.');
             }
 
             // Create new advertisement
@@ -59,6 +59,15 @@ class AdvertisementService {
             console.error('Error expiring advertisements:', error.message);
         }
     }
+    static async removeAdvertisement(adId, storeId) {
+        try {
+            // Find and remove the advertisement if it belongs to the authenticated store
+            return await AdvertisementModel.deleteOne({ _id: adId, storeId });
+        } catch (error) {
+            throw new Error('Failed to remove advertisement: ' + error.message);
+        }
+    }
+    
 }
 
 module.exports = AdvertisementService;

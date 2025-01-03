@@ -39,8 +39,8 @@ const advertisementSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Active', 'Expired'],
-        default: 'Pending',
+        enum: ['Active', 'Expired'],
+        default: 'Active',
     },
     createdAt: {
         type: Date,

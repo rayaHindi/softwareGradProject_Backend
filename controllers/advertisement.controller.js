@@ -56,3 +56,26 @@ exports.getStoreAdvertisements = async (req, res) => {
         });
     }
 };
+exports.removeAdvertisement = async (req, res) => {
+    const adId = req.params.adId; // Advertisement ID from URL
+    const storeId = req.user._id; // Store ID from authenticated user
+
+    try {
+        const result = await AdvertisementService.removeAdvertisement(adId, storeId);
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Advertisement not found or you are not authorized to delete it.',
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Advertisement removed successfully.',
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to remove advertisement: ' + error.message,
+        });
+    }
+};

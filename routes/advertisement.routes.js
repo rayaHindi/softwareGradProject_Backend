@@ -9,6 +9,7 @@ router.post('/add', authMiddleware, advertisementController.addAdvertisement);
 // Get all advertisements (Admin access)
 router.get('/getAll',authMiddleware, advertisementController.getAdvertisements);
 router.get('/getSoreAd',authMiddleware, advertisementController.getStoreAdvertisements);
+router.delete('/removeAdvertisement/:adId',authMiddleware, advertisementController.removeAdvertisement);
 
 // Export the router
 module.exports = router;

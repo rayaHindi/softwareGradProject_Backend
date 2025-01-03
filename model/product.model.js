@@ -70,10 +70,7 @@ const productSchema = new Schema({
         type: Boolean,
         default: true,
     },
-    salesCount: {/////////new///////////////
-        type: Number,
-        default: 0,
-    },
+    
     deliveryType: {/////////new///////////////
         type: String,
         enum: ['instant', 'scheduled'],
@@ -87,6 +84,10 @@ const productSchema = new Schema({
     updatedAt: {
         type: Date,
         default: Date.now,
+    },
+    salesCount: {/////////new///////////////
+        type: Number,
+        default: 0,
     },
     searchCount: {
         type: Number,
