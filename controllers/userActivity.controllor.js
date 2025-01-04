@@ -1,5 +1,5 @@
 const UserActivityService = require('../services/userActivity.services');
-
+const UserActivityModel = require('../model/userActivity.model');
 exports.getActivity = async (req, res) => {
     const userId = req.user._id;
 
@@ -41,14 +41,14 @@ exports.addProductVisit = async (req, res) => {
 
 exports.addSearchHistory = async (req, res) => {
     const userId = req.user._id;
-    const { query, interactedProductIds, interactedStoreIds } = req.body;
+    const { query, interactedProductId, interactedStoreId } = req.body;
 
     try {
         await UserActivityService.addSearchHistory(
             userId,
             query,
-            interactedProductIds || [],
-            interactedStoreIds || []
+            interactedProductId || null,
+            interactedStoreId || null
         );
         res.status(200).json({ success: true, message: 'Search history updated successfully.' });
     } catch (error) {
@@ -56,6 +56,7 @@ exports.addSearchHistory = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to add search history.' });
     }
 };
+
 
 
 exports.addStoreView = async (req, res) => {
@@ -70,3 +71,44 @@ exports.addStoreView = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to record store view.' });
     }
 };
+exports.getRecentlyViewedProducts = async (req, res) => {
+    const userId = req.user._id; // Extracted from token
+
+    try {
+        // Find the user's activity document and populate necessary fields
+        const userActivity = await UserActivityModel.findOne({ userId })
+            .populate({
+                path: 'lastVisitedProducts.productId', // Populate all product details
+                populate: {
+                    path: 'store', // Populate the store field for each product
+                    select: 'storeName logo', // Include only storeName and logo
+                },
+            })
+            .exec();
+
+        if (!userActivity || !userActivity.lastVisitedProducts) {
+            return res.status(404).json({ success: false, message: 'User activity not found or no recently viewed products.' });
+        }
+
+        // Safely extract last visited products, filter out invalid entries
+        const recentlyViewedProducts = userActivity.lastVisitedProducts
+            .filter((item) => item.productId) // Ensure productId exists
+            .map((item) => ({
+                productId: item.productId._id, // Safely access _id
+                ...item.productId._doc, // Spread all product details from MongoDB document
+                visitedAt: item.visitedAt,
+            }));
+
+            if (!userActivity || !userActivity.lastVisitedProducts) {
+                return res.status(200).json({ success: true, products: [] });
+            }
+            
+        console.log(`${recentlyViewedProducts.length}`);
+        res.status(200).json({ success: true, products: recentlyViewedProducts });
+    } catch (error) {
+        console.error('Error fetching recently viewed products:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch recently viewed products.' });
+    }
+};
+
+

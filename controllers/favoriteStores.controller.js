@@ -60,3 +60,27 @@ exports.checkIfFavorite = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+exports.getProductsFromFavoriteStores = async (req, res) => {
+    try {
+        const userId = req.user._id; // Extracted from token
+        const products = await FavoriteStoreServices.getProductsFromFavoriteStores(userId);
+
+        res.status(200).json({ success: true, products });
+    } catch (err) {
+        console.error('Error fetching products from favorite stores:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to fetch products from favorite stores.' });
+    }
+};
+exports.getRandomProductsFromFavoriteStores = async (req, res) => {
+    try {
+        const userId = req.user._id; // Extracted from token
+        const products = await FavoriteStoreServices.getRandomProductsFromFavoriteStores(userId);
+
+        res.status(200).json({ success: true, products });
+    } catch (err) {
+        console.error('Error fetching random products from favorite stores:', err.message);
+        res.status(500).json({ success: false, message: 'Failed to fetch products from favorite stores.' });
+    }
+};
+
+

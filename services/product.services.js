@@ -243,15 +243,21 @@ class ProductServices {
             throw new Error('Error reducing product quantity: ' + error.message);
         }
     }
-    static async getMostSearchedProducts(limit = 3) {
+    static async getMostSearchedProducts(limit = 6) {
         try {
+            // Fetch the most searched products and populate store details
             return await ProductModel.find()
                 .sort({ searchCount: -1 }) // Sort by descending search count
-                .limit(limit); // Fetch top `limit` results
+                .limit(limit) // Fetch top `limit` results
+                .populate({
+                    path: 'store', // Populate the store field in each product
+                    select: 'storeName logo', // Include only storeName and logo
+                });
         } catch (error) {
             throw new Error('Error fetching most searched products: ' + error.message);
         }
     }
+    
 
     static async incrementProductSearchCount(productId) {
         try {

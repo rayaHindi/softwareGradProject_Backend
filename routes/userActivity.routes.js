@@ -9,5 +9,6 @@ router.post('/updateLastVisitedCategory', authenticateToken, userActivityControl
 router.post('/addProductVisit', authenticateToken, userActivityController.addProductVisit);
 router.post('/addSearchHistory', authenticateToken, userActivityController.addSearchHistory);
 router.post('/addStoreView', authenticateToken, userActivityController.addStoreView);
+router.get('/getRecentlyViewedProducts', authenticateToken, userActivityController.getRecentlyViewedProducts);
 
 module.exports = router;

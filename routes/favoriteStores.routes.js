@@ -8,5 +8,6 @@ router.delete('/:storeId', authenticateToken, FavoriteStoreController.removeFavo
 router.get('/checkIfFav/:storeId', authenticateToken, FavoriteStoreController.checkIfFavorite);
 
 router.get('/get', authenticateToken, FavoriteStoreController.getFavoriteStores);
+router.get('/getStoresProducts', authenticateToken, FavoriteStoreController.getRandomProductsFromFavoriteStores);
 
 module.exports = router;

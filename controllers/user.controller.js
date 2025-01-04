@@ -462,3 +462,13 @@ exports.getWishList = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch wishlist" });
     }
 };
+exports.storesOfFavCategories = async (req, res) => {
+    const userId = req.user._id;
+    try {
+        const recommendedStores = await UserServices.getstoresOfFavCategories(userId);
+        res.status(200).json({ success: true, stores: recommendedStores });
+    } catch (error) {
+        console.error("Error fetching recommended stores:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch recommended stores" });
+    }
+};

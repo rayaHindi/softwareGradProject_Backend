@@ -1,6 +1,8 @@
 //user.services.js
 //In services, all the database operation happens like fetching, Insertion, Deletion.
 const UserModel = require("../model/user.model");
+const StoreModel = require("../model/store.model");
+const CategoryModel =require("../model/category.model");
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 
@@ -236,10 +238,18 @@ class UserServices {
 
     static async getWishList(userId) {
         try {
-            const user = await UserModel.findById(userId).populate({
-                path: 'wishlist',
-                model: 'product',
-            });
+            const user = await UserModel.findById(userId)
+                .populate({
+                    path: 'wishlist', // Populate wishlist (assumes wishlist contains product IDs)
+                    model: 'product',
+                    populate: {
+                        path: 'store', // Populate store details within each product
+                        select: 'storeName logo', // Only include storeName and logo
+                    },
+                });
+
+            console.log(user);
+
 
             if (!user) throw new Error("User not found");
 
@@ -248,8 +258,62 @@ class UserServices {
             throw error;
         }
     }
-
-
+    static async getstoresOfFavCategories(userId) {
+        try {
+            // Fetch the user's selected categories or genres
+            const user = await UserModel.findById(userId).select('selectedGenres');
+            if (!user || !user.selectedGenres || user.selectedGenres.length === 0) {
+                throw new Error('No genres selected for this user.');
+            }
+    
+            const genres = user.selectedGenres;
+    
+            // Fetch the IDs and other details of the categories based on their names
+            const categories = await CategoryModel.find({ name: { $in: genres } })
+                .select('_id name image'); // Include category name and image
+            if (!categories || categories.length === 0) {
+                throw new Error('No matching categories found for the selected genres.');
+            }
+    
+            const categoryIds = categories.map((category) => category._id);
+    
+            // Divide the 10-store limit equally across the selected categories
+            const storesPerCategory = Math.ceil(10 / categoryIds.length);
+    
+            let recommendedStores = [];
+    
+            for (const category of categories) {
+                const stores = await StoreModel.find({ category: category._id }) // Find stores by category ID
+                    .select('_id storeName logo category') // Include category in the store data
+                    .limit(storesPerCategory); // Limit results per category
+    
+                // Add category details to each store
+                const enrichedStores = stores.map((store) => ({
+                    ...store.toObject(),
+                    category: {
+                        _id: category._id,
+                        name: category.name,
+                        image: category.image,
+                    },
+                }));
+    
+                recommendedStores.push(...enrichedStores);
+            }
+    
+            // Shuffle the recommendedStores array
+            recommendedStores = recommendedStores.sort(() => Math.random() - 0.5);
+    
+            // Ensure no more than 10 stores are returned overall
+            recommendedStores = recommendedStores.slice(0, 10);
+    
+            return recommendedStores; // Return the list of enriched stores
+        } catch (error) {
+            console.error('Error fetching stores by genres:', error);
+            throw new Error('Failed to fetch stores by genres.');
+        }
+    }
+    
+    
 }
 
 module.exports = UserServices;

@@ -29,25 +29,23 @@ const userActivitySchema = new Schema({
     searchHistory: [
         {
             query: {
-                type: String, // The search query entered by the user
+                type: String,
                 required: true,
             },
             searchedAt: {
                 type: Date,
-                default: Date.now, // Automatically set to current time
+                default: Date.now,
             },
-            interactedProducts: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'product', // Reference to the Product model
-                },
-            ],
-            interactedStores: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'store', // Reference to the Store model
-                },
-            ],
+            interactedProduct: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'product', // Reference to the Product model
+                default: null, // Null if no product interaction
+            },
+            interactedStore: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'store', // Reference to the Store model
+                default: null, // Null if no store interaction
+            },
         },
     ],
     viewedStores: [

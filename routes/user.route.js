@@ -19,6 +19,8 @@ router.post("/updateUserPersonalInfo", authenticateToken, UserController.updateU
 router.post("/addCreditCard", authenticateToken, UserController.addCreditCard);
 router.get("/getCreditCardData", authenticateToken, UserController.getCreditCardData);
 
+router.get("/getRecommendedStoresByCategory", authenticateToken, UserController.storesOfFavCategories);
+
 // handle favoriteStores
 //router.put('/favoriteStores/:storeId', authenticateToken, UserController.addFavoriteStore);
 //router.delete('/favoriteStores/:storeId', authenticateToken, UserController.removeFavoriteStore);
