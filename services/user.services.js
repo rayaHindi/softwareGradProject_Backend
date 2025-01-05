@@ -3,6 +3,8 @@
 const UserModel = require("../model/user.model");
 const StoreModel = require("../model/store.model");
 const CategoryModel =require("../model/category.model");
+const ProductModel =require("../model/product.model");
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 
@@ -287,14 +289,22 @@ class UserServices {
                     .select('_id storeName logo category') // Include category in the store data
                     .limit(storesPerCategory); // Limit results per category
     
-                // Add category details to each store
-                const enrichedStores = stores.map((store) => ({
-                    ...store.toObject(),
-                    category: {
-                        _id: category._id,
-                        name: category.name,
-                        image: category.image,
-                    },
+                // Add category details and filter for in-stock products for each store
+                const enrichedStores = await Promise.all(stores.map(async (store) => {
+                    const inStockProducts = await ProductModel.find({
+                        store: store._id,
+                        inStock: true, // Only include in-stock products
+                    }).select('_id name price image'); // Include relevant product fields
+                    
+                    return {
+                        ...store.toObject(),
+                        category: {
+                            _id: category._id,
+                            name: category.name,
+                            image: category.image,
+                        },
+                        products: inStockProducts, // Attach in-stock products to the store
+                    };
                 }));
     
                 recommendedStores.push(...enrichedStores);
@@ -312,6 +322,7 @@ class UserServices {
             throw new Error('Failed to fetch stores by genres.');
         }
     }
+    
     
     
 }

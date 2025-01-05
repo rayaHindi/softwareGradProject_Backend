@@ -245,8 +245,8 @@ class ProductServices {
     }
     static async getMostSearchedProducts(limit = 6) {
         try {
-            // Fetch the most searched products and populate store details
-            return await ProductModel.find()
+            // Fetch the most searched products that are in stock and populate store details
+            return await ProductModel.find({ inStock: true }) // Filter for in-stock products
                 .sort({ searchCount: -1 }) // Sort by descending search count
                 .limit(limit) // Fetch top `limit` results
                 .populate({
@@ -257,6 +257,7 @@ class ProductServices {
             throw new Error('Error fetching most searched products: ' + error.message);
         }
     }
+    
     
 
     static async incrementProductSearchCount(productId) {

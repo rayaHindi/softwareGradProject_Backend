@@ -71,44 +71,37 @@ exports.addStoreView = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to record store view.' });
     }
 };
+
 exports.getRecentlyViewedProducts = async (req, res) => {
-    const userId = req.user._id; // Extracted from token
+    const userId = req.user._id;
 
     try {
-        // Find the user's activity document and populate necessary fields
         const userActivity = await UserActivityModel.findOne({ userId })
             .populate({
-                path: 'lastVisitedProducts.productId', // Populate all product details
+                path: 'lastVisitedProducts.productId',
+                match: { inStock: true }, // Include only in-stock products
                 populate: {
-                    path: 'store', // Populate the store field for each product
-                    select: 'storeName logo', // Include only storeName and logo
+                    path: 'store',
+                    select: 'storeName logo',
                 },
             })
             .exec();
 
         if (!userActivity || !userActivity.lastVisitedProducts) {
-            return res.status(404).json({ success: false, message: 'User activity not found or no recently viewed products.' });
+            return res.status(200).json({ success: true, products: [] });
         }
 
-        // Safely extract last visited products, filter out invalid entries
         const recentlyViewedProducts = userActivity.lastVisitedProducts
-            .filter((item) => item.productId) // Ensure productId exists
+            .filter((item) => item.productId) // Ensure productId exists and matches inStock criteria
             .map((item) => ({
-                productId: item.productId._id, // Safely access _id
-                ...item.productId._doc, // Spread all product details from MongoDB document
+                productId: item.productId._id,
+                ...item.productId._doc,
                 visitedAt: item.visitedAt,
             }));
 
-            if (!userActivity || !userActivity.lastVisitedProducts) {
-                return res.status(200).json({ success: true, products: [] });
-            }
-            
-        console.log(`${recentlyViewedProducts.length}`);
         res.status(200).json({ success: true, products: recentlyViewedProducts });
     } catch (error) {
         console.error('Error fetching recently viewed products:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch recently viewed products.' });
+        res.status(500).json({ success: false, message: 'Failed to fetch recently viewed products' });
     }
 };
-
-

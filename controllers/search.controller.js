@@ -39,10 +39,10 @@ exports.getSuggestedProducts = async (req, res) => {
 
         // Fetch products from wishlist
         const user = await UserModel.findById(userId).populate('wishlist');
-        const wishlistProducts = user?.wishlist || [];
+        const wishlistProducts = user?.wishlist.filter((product) => product.inStock) || [];
 
         // Fetch top-selling products
-        const bestSellingProducts = await ProductModel.find()
+        const bestSellingProducts = await ProductModel.find({ inStock: true })
             .sort({ salesCount: -1 })
             .limit(10); // Allow up to 10 best sellers for flexibility
 
@@ -73,16 +73,14 @@ exports.getSuggestedProducts = async (req, res) => {
             }
         });
 
-        // If there are not enough products, add more best-sellers to fill the remaining slots
-        bestSellingProducts.forEach((product) => {
-            if (uniqueProductIds.size < 10 && !uniqueProductIds.has(product._id)) {
-                uniqueProductIds.add(product._id);
-                prioritizedProducts.push(product._id);
-            }
+        // Fetch product details and populate store name and logo
+        const suggestedProducts = await ProductModel.find({
+            _id: { $in: Array.from(uniqueProductIds) },
+            inStock: true, // Ensure the products are in stock
+        }).populate({
+            path: 'store', // Populate store details
+            select: 'storeName logo', // Include store name and logo only
         });
-
-        // Fetch product details for the combined list
-        const suggestedProducts = await ProductModel.find({ _id: { $in: Array.from(uniqueProductIds) } });
 
         // Shuffle the products to create a dynamic display
         const shuffledProducts = suggestedProducts.sort(() => Math.random() - 0.5);
