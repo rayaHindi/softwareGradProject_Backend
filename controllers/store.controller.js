@@ -1,6 +1,7 @@
 const mongoose = require('mongoose'); // Import mongoose
 const jwt = require("jsonwebtoken");
 const storeService = require('../services/store.services');
+const  storeModel = require('../model/store.model');
 const categoryModel = require('../model/category.model'); // Import Category Model
 const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
@@ -77,17 +78,15 @@ exports.getStoreDetails = async (req, res) => {
         const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
         const store = await storeService.getStoreDetails(storeId);
 
-        // Log the city name for debugging
-        console.log(`store.city?.name: ${store.city?.name}`);
-
         res.status(200).json({
             status: true,
             storeName: store.storeName,
             contactEmail: store.contactEmail,
             phoneNumber: store.phoneNumber,
             city: store.city?.name, // Include city name
-            category: store.category?.name, // Include category name if populated
+            category: store.category?.name, // Include category name
             logo: store.logo,
+            allowSpecialOrders: store.allowSpecialOrders,
         });
     } catch (error) {
         res.status(500).json({
@@ -96,6 +95,7 @@ exports.getStoreDetails = async (req, res) => {
         });
     }
 };
+
 
 exports.getDeliveryCities = async (req, res) => {
     try {
@@ -207,5 +207,45 @@ exports.getAllStores = async (req, res) => {
         res.status(200).json({ status: true, stores });
     } catch (error) {
         res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+exports.checkIfAllowSpecialOrders = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Store ID passed as a URL parameter
+
+/*        // Validate storeId
+        if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({
+                status: false,
+                message: 'Invalid or missing store ID',
+            });
+        }*/
+
+        // Fetch the store and retrieve allowSpecialOrders
+        const store = await storeModel.findById(storeId).select('allowSpecialOrders');
+
+        if (!store) {
+            return res.status(404).json({
+                status: false,
+                message: 'Store not found',
+            });
+        }
+
+        // Return the allowSpecialOrders field
+        res.status(200).json({
+            status: true,
+            message: 'Store information fetched successfully',
+            data: {
+                allowSpecialOrders: store.allowSpecialOrders,
+            },
+        });
+    } catch (err) {
+        console.error('Error fetching allowSpecialOrders:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Internal server error',
+            error: err.message,
+        });
     }
 };

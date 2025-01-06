@@ -103,27 +103,37 @@ exports.deleteProduct = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 exports.getProductsByStoreIdForOwner = async (req, res) => {
     try {
         console.log('in getProductsByStoreId for OWNER');
-        // const { storeId } = req.query;
         const storeId = req.user._id;
-        console.log('storeId: ');
-        console.log(storeId);
+        console.log('storeId: ', storeId);
+
         // Validate storeId
         if (!mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({ status: false, message: 'Invalid store ID' });
         }
 
+        // Fetch store details to get `allowSpecialOrders`
+        const store = await StoreServices.getStoreById(storeId);
+        if (!store) {
+            return res.status(404).json({ status: false, message: 'Store not found' });
+        }
+
         // Call the service method to fetch products by store ID
         const products = await ProductServices.getProductsByStoreId(storeId);
-        console.log("Products fetched successfully: ");
-        console.log(products);
+        console.log("Products fetched successfully: ", products);
+
         res.status(200).json({
             status: true,
             message: 'Products fetched successfully',
-            data: products,
+            data: {
+                products,
+                allowSpecialOrders: store.allowSpecialOrders, // Include `allowSpecialOrders`
+            },
         });
+        
     } catch (err) {
         console.error('Error fetching products:', err);
         res.status(500).json({
@@ -133,6 +143,7 @@ exports.getProductsByStoreIdForOwner = async (req, res) => {
         });
     }
 };
+
 
 exports.getProductsByStoreIdForUsers = async (req, res) => {
     try {
