@@ -1,17 +1,20 @@
-// SpecialOrderChoice Model (specialOrderChoice.model.js)
 const specialOrderChoiceSchema = new Schema({
+    optionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'storeSpecialOrderOption', // Links to the option this choice belongs to
+        required: true,
+    },
     name: {
-        type: String,
-        required: [true, 'Choice name is required'],
-        trim: true,
+        type: String, // e.g., "Small", "Medium", "Chocolate Filling"
+        required: true,
     },
     extraCost: {
-        type: Number,
-        min: [0, 'Extra cost cannot be negative'],
+        type: Number, // Additional cost for this choice
+        min: 0,
         default: 0,
     },
     description: {
-        type: String,
+        type: String, // Description of this choice, if needed
         trim: true,
     },
     createdAt: {
@@ -22,12 +25,7 @@ const specialOrderChoiceSchema = new Schema({
         type: Date,
         default: Date.now,
     },
-    });
-    
-    specialOrderChoiceSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-    next();
-    });
-    
-    const SpecialOrderChoiceModel = db.model('specialOrderChoice', specialOrderChoiceSchema);
-    module.exports = SpecialOrderChoiceModel;
+});
+
+const SpecialOrderChoiceModel = db.model('specialOrderChoice', specialOrderChoiceSchema);
+module.exports = SpecialOrderChoiceModel;

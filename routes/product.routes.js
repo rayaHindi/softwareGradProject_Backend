@@ -11,6 +11,7 @@ router.delete('/deleteProduct/:productId', authenticateToken, ProductController.
 router.put('/reduce-quantity/:productId', authenticateToken, ProductController.reduceQuantity);
 router.get('/getMostSearched',ProductController.getMostSearched);
 router.get('/incrementSearchCount',ProductController.incrementSearchCount);
+router.post('/rateProduct', authenticateToken, ProductController.rateProduct);
 
 /*
 router.get('/products', productController.getAllProductsController);

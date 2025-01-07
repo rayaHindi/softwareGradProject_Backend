@@ -1,5 +1,7 @@
 const ProductModel = require("../model/product.model");
 const StoreModel = require("../model/store.model");
+const OrderModel = require("../model/order.model");
+
 const mongoose = require('mongoose');
 
 
@@ -257,8 +259,8 @@ class ProductServices {
             throw new Error('Error fetching most searched products: ' + error.message);
         }
     }
-    
-    
+
+
 
     static async incrementProductSearchCount(productId) {
         try {
@@ -273,6 +275,42 @@ class ProductServices {
         }
     }
 
+    static async updateProductRatings(products, orderId) {
+        try {
+            const updatedProducts = [];
+    
+            for (const { productId, rating } of products) {
+                // Ignore the product if the rating is 0
+                if (rating === 0) {
+                    console.log(`Product rating for productId ${productId} is 0, skipping update`);
+                    continue;
+                }
+    
+                const product = await ProductModel.findById(productId);
+                if (!product) continue;
+    
+                // Update product rating
+                product.rating.total += rating;
+                product.rating.count += 1;
+                product.rating.average = product.rating.total / product.rating.count;
+    
+                await product.save();
+                updatedProducts.push(product);
+    
+                // Update the `hasRatedProduct` flag for the specific product in the order
+                await OrderModel.updateOne(
+                    { _id: orderId, "items.productId": productId },
+                    { $set: { "items.$.hasRatedProduct": true } }
+                );
+            }
+    
+            return updatedProducts;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
 
 }
 

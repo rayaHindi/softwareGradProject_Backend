@@ -94,8 +94,9 @@ const storeSchema = new Schema({
         lastName: { type: String, required: false },
     },
     rating: {
-        type: Number,
-        default: 0, // Default rating
+        total: { type: Number, default: 0 }, // Sum of all ratings
+        count: { type: Number, default: 0 }, // Total number of ratings
+        average: { type: Number, default: 0 }, // Calculated as total / count
     },
     numberOfReceivedOrders: {
         type: Number,

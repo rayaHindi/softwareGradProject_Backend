@@ -1,7 +1,7 @@
 const mongoose = require('mongoose'); // Import mongoose
 const jwt = require("jsonwebtoken");
 const storeService = require('../services/store.services');
-const  storeModel = require('../model/store.model');
+const storeModel = require('../model/store.model');
 const categoryModel = require('../model/category.model'); // Import Category Model
 const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
@@ -214,13 +214,13 @@ exports.checkIfAllowSpecialOrders = async (req, res) => {
     try {
         const { storeId } = req.params; // Store ID passed as a URL parameter
 
-/*        // Validate storeId
-        if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
-            return res.status(400).json({
-                status: false,
-                message: 'Invalid or missing store ID',
-            });
-        }*/
+        /*        // Validate storeId
+                if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+                    return res.status(400).json({
+                        status: false,
+                        message: 'Invalid or missing store ID',
+                    });
+                }*/
 
         // Fetch the store and retrieve allowSpecialOrders
         const store = await storeModel.findById(storeId).select('allowSpecialOrders');
@@ -247,5 +247,29 @@ exports.checkIfAllowSpecialOrders = async (req, res) => {
             message: 'Internal server error',
             error: err.message,
         });
+    }
+};
+exports.rateStore = async (req, res) => {
+    try {
+        console.log('in updateStoreRating controller');
+
+        const { storeId, storeRating, orderId } = req.body;
+
+        if (!storeId || !storeRating || !orderId) {
+            return res.status(400).json({ error: 'Store ID, rating, and order ID are required' });
+        }
+        console.log('in updateStoreRating service before');
+
+        const updatedStore = await storeService.updateStoreRating(storeId, storeRating, orderId);
+        console.log('in updateStoreRating after');
+
+        if (!updatedStore) {
+            return res.status(404).json({ error: 'Store not found' });
+        }
+
+        res.status(200).json({ message: 'Store rating updated successfully', data: updatedStore });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };

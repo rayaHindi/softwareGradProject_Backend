@@ -65,6 +65,10 @@ const orderItemSchema = new Schema({
             return this.deliveryType === 'scheduled' && this.timePickingAllowed;
         }, // Required only if `timePickingAllowed` is true
     },
+    hasRatedProduct: {
+        type: Boolean,
+        default: false, // Default to not rated
+    },
 });
 
 // Order Schema
@@ -121,6 +125,24 @@ const orderSchema = new Schema({
         required: true, // Make it mandatory
         default: 'instant',
     },
+    hasRatedStore: {
+        type: Boolean,
+        default: false, // Default to not rated
+    },
+    paymentDetails: {
+        method: {
+            type: String,
+            enum: ['Cash on Delivery', 'Visa', 'Apple Pay'],
+            required: true,
+        },
+        cardNumber: {
+            type: String,
+            default:null,
+            required: false,
+
+        },
+    },
+    
     createdAt: {
         type: Date,
         default: Date.now,

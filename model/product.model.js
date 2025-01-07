@@ -70,7 +70,7 @@ const productSchema = new Schema({
         type: Boolean,
         default: true,
     },
-    
+
     deliveryType: {/////////new///////////////
         type: String,
         enum: ['instant', 'scheduled'],
@@ -92,7 +92,16 @@ const productSchema = new Schema({
     searchCount: {
         type: Number,
         default: 0,
-    }
+    },
+    rating: {
+        total: { type: Number, default: 0 }, // Sum of all ratings
+        count: { type: Number, default: 0 }, // Total number of ratings
+        average: { type: Number, default: 0 }, // Calculated as total / count
+    },
+    /* feedback: [{
+         feedback: String, // User's text feedback
+         createdAt: Date,
+     }]*/
 
 });
 
@@ -108,7 +117,7 @@ productSchema.pre("save", function (next) {
     next();
 });
 productSchema.pre("validate", function (next) {
-    if (this.deliveryType === "scheduled" && (this.timeRequired == null || this.timeRequired <= 0)) {
+    if (this.isUponOrder && (this.timeRequired == null || this.timeRequired <= 0)) {
         return next(new Error("Scheduled products must have a valid 'timeRequired' value greater than 0."));
     }
     next();

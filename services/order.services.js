@@ -73,6 +73,7 @@ class OrderServices {
                         (sum, item) => sum + item.totalPriceWithQuantity,
                         0
                     ),
+                    paymentDetails:order.paymentDetails,
                 };
             });
 

@@ -1,6 +1,8 @@
 const StoreModel = require('../model/store.model');
 const UserService = require('../services/user.services');
 const CityModel = require('../model/city.model');
+const OrderModel = require("../model/order.model");
+
 class StoreService {
     static async registerStore({ storeName, contactEmail, phoneNumber, password, accountType = 'S', country, city, logo, allowSpecialOrders, selectedGenreId }) {
         try {
@@ -60,7 +62,7 @@ class StoreService {
             const store = await StoreModel.findById(storeId)
                 .populate('city', 'name') // Populate the city reference
                 .populate('category', 'name'); // Populate the category reference
-            
+
             if (!store) {
                 throw new Error('Store not found');
             }
@@ -69,7 +71,7 @@ class StoreService {
             throw new Error('Error fetching store details: ' + error.message);
         }
     }
-    
+
     static async getDeliveryCities(storeId) {
         try {
             const store = await StoreModel.findById(storeId).populate('deliveryCities.city', 'name'); // Populate city name
@@ -140,8 +142,55 @@ class StoreService {
             throw new Error('Error incrementing store search count: ' + error.message);
         }
     }
+    static async getStoreById(storeId) {
+        try {
+            const store = await StoreModel.findById(storeId)
+                .populate('city', 'name') // Populate the city reference
+                .populate('category', 'name'); // Populate the category reference
 
+            if (!store) {
+                throw new Error('Store not found');
+            }
 
+            return store; // Return the populated store document
+        } catch (error) {
+            throw new Error('Error fetching store by ID: ' + error.message);
+        }
+    }
+    static async updateStoreRating(storeId, storeRating, orderId) {
+        try {
+            console.log('in updateStoreRating service');
+    
+            // Ignore the update if the rating is 0
+            if (storeRating === 0) {
+                console.log('Store rating is 0, skipping update');
+                return null;
+            }
+    
+            // Find the store
+            const store = await StoreModel.findById(storeId);
+            if (!store) return null;
+    
+            // Update store rating
+            store.rating.total += storeRating;
+            store.rating.count += 1;
+            store.rating.average = store.rating.total / store.rating.count;
+    
+            await store.save();
+    
+            // Update the `hasRatedStore` flag in the order
+            await OrderModel.updateOne(
+                { _id: orderId },
+                { $set: { hasRatedStore: true } }
+            );
+    
+            return store;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
 }
 
 module.exports = StoreService;

@@ -1,52 +1,57 @@
-// SpecialOrder Model (specialOrder.model.js)
 const specialOrderSchema = new Schema({
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user', // Assuming you have a User model for customers
-        required: [true, "Customer ID is required"],
+        ref: 'user', // References the user placing the order
+        required: true,
     },
     storeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'store', // Assuming you have a Store model
-        required: [true, "Store ID is required"],
+        ref: 'store', // References the store the order is for
+        required: true,
     },
     orderDate: {
         type: Date,
         default: Date.now,
     },
-    specialOrderOptions: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'storeSpecialOrderOption',
-    }],
-    notes: {
-        type: String,
-        trim: true,
-    },
+    orderItems: [
+        {
+            optionId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'storeSpecialOrderOption', // References the selected option
+                required: true,
+            },
+            selectedChoices: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'specialOrderChoice', // References the selected choices
+                },
+            ],
+            additionalFields: {
+                size: { type: String, trim: true }, // Optional: Size (e.g., Small, Medium, Large)
+                quantity: { type: Number, min: 1, default: 1 },
+                notes: { type: String, trim: true }, // Optional: Custom notes
+                imageUrl: { type: String }, // Optional: Uploaded image URL
+            },
+            totalPrice: {
+                type: Number, // Total price for this item (including choices)
+                required: true,
+            },
+        },
+    ],
     status: {
         type: String,
         enum: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
         default: 'Pending',
     },
     totalPrice: {
-        type: Number,
-        min: [0, "Total price cannot be negative"],
+        type: Number, // Total price for the whole order
+        required: true,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
+    notes: {
+        type: String, // General notes for the order
+        trim: true,
     },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
-    });
-    
-    specialOrderSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-    next();
-    });
-    
-    const SpecialOrderModel = db.model('specialOrder', specialOrderSchema);
-    module.exports = SpecialOrderModel;
-    
-    
+});
+
+const SpecialOrderModel = db.model('specialOrder', specialOrderSchema);
+module.exports = SpecialOrderModel;

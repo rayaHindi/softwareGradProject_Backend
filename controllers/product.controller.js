@@ -133,7 +133,7 @@ exports.getProductsByStoreIdForOwner = async (req, res) => {
                 allowSpecialOrders: store.allowSpecialOrders, // Include `allowSpecialOrders`
             },
         });
-        
+
     } catch (err) {
         console.error('Error fetching products:', err);
         res.status(500).json({
@@ -217,7 +217,7 @@ exports.getMostSearched = async (req, res) => {
             success: true,
             stores: topStores,
             products: topProducts,
-            
+
         });
     } catch (error) {
         console.error('Error fetching most searched items:', error.message);
@@ -251,5 +251,27 @@ exports.incrementSearchCount = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+};
+
+
+exports.rateProduct = async (req, res) => {
+    try {
+        const { products,orderId } = req.body;
+
+        if (!products || !Array.isArray(products)) {
+            return res.status(400).json({ error: 'Products array is required' });
+        }
+
+        const updatedProducts = await ProductServices.updateProductRatings(products,orderId);
+
+        if (!updatedProducts) {
+            return res.status(404).json({ error: 'One or more products not found' });
+        }
+
+        res.status(200).json({ message: 'Product ratings updated successfully', data: updatedProducts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };

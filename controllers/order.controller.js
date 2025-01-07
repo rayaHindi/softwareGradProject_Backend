@@ -5,7 +5,8 @@ const UserModel = require('../model/user.model'); // Import the User model
 const ProductModel = require('../model/product.model');
 exports.placeOrder = async (req, res) => {
     const userId = req.user._id; // Extracted from authentication middleware
-    const { items, totalPrice, deliveryDetails, deliveryPreference } = req.body;
+    const { items, totalPrice, deliveryDetails, deliveryPreference, paymentDetails } = req.body;
+    console.log('Payment Details:', paymentDetails);
 
     try {
         // Step 1: Validate items and required fields
@@ -33,6 +34,13 @@ exports.placeOrder = async (req, res) => {
                 }
             }
         }
+        if (!paymentDetails || !paymentDetails.method) {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment details are required and must include a valid method.',
+            });
+        }
+
 
         // Step 2: Extract unique store IDs from items
         const uniqueStoreIds = [...new Set(items.map((item) => item.storeId.toString()))];
@@ -153,6 +161,7 @@ exports.placeOrder = async (req, res) => {
             userOrderNumber, // Include the user's order number
             storeTotals, // Include aggregated totals for each store
             deliveryPreference,
+            paymentDetails,
         };
 
         // Step 7: Create the order in the database
