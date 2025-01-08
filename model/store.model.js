@@ -93,6 +93,14 @@ const storeSchema = new Schema({
         firstName: { type: String, required: false },
         lastName: { type: String, required: false },
     },
+
+    bio: {
+        type: String,
+        required: false,
+        default: '', // Default to an empty string
+        trim: true,
+    },
+
     rating: {
         total: { type: Number, default: 0 }, // Sum of all ratings
         count: { type: Number, default: 0 }, // Total number of ratings
@@ -105,6 +113,7 @@ const storeSchema = new Schema({
     searchCount: {
         type: Number,
         default: 0,
+
     }
 
 });

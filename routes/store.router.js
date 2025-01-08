@@ -13,17 +13,20 @@ router.get('/getProductsByStoreId/:storeId', ProductController.getProductsByStor
 router.get('/details', authenticateToken, StoreController.getStoreDetails);
 
 // Route to get delivery cities
-router.get('/getDelivery-cities', authenticateToken,StoreController.getDeliveryCities);
+router.get('/getDelivery-cities', authenticateToken, StoreController.getDeliveryCities);
 router.get('/getDelivery-citiesByID/:storeId', StoreController.getDeliveryCitiesByStoreId);
 
 
 // Route to update delivery cities
 router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateDeliveryCities);
 
+
+
+router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
+
 router.get('/getAllStores',StoreController.getAllStores);
 router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken,StoreController.checkIfAllowSpecialOrders);
 
 router.post('/rateStore', authenticateToken, StoreController.rateStore);
-
 
 module.exports = router;
