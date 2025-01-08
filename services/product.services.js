@@ -1,5 +1,7 @@
 const ProductModel = require("../model/product.model");
 const StoreModel = require("../model/store.model");
+const OrderModel = require("../model/order.model");
+
 const mongoose = require('mongoose');
 
 
@@ -53,7 +55,7 @@ class ProductServices {
             } else if (productData.deliveryType === 'scheduled') {
                 productData.allowDeliveryDateSelection = productData.allowDeliveryDateSelection || false;
             }
-            
+
 
             if (productData.isUponOrder && !productData.timeRequired) {
                 throw new Error('Time required must be specified for made-to-order products');
@@ -243,6 +245,72 @@ class ProductServices {
             throw new Error('Error reducing product quantity: ' + error.message);
         }
     }
+    static async getMostSearchedProducts(limit = 6) {
+        try {
+            // Fetch the most searched products that are in stock and populate store details
+            return await ProductModel.find({ inStock: true }) // Filter for in-stock products
+                .sort({ searchCount: -1 }) // Sort by descending search count
+                .limit(limit) // Fetch top `limit` results
+                .populate({
+                    path: 'store', // Populate the store field in each product
+                    select: 'storeName logo', // Include only storeName and logo
+                });
+        } catch (error) {
+            throw new Error('Error fetching most searched products: ' + error.message);
+        }
+    }
+
+
+
+    static async incrementProductSearchCount(productId) {
+        try {
+            // Increment the search count for a product by its ID
+            await ProductModel.findByIdAndUpdate(
+                productId,
+                { $inc: { searchCount: 1 } },
+                { new: true }
+            );
+        } catch (error) {
+            throw new Error('Error incrementing product search count: ' + error.message);
+        }
+    }
+
+    static async updateProductRatings(products, orderId) {
+        try {
+            const updatedProducts = [];
+    
+            for (const { productId, rating } of products) {
+                // Ignore the product if the rating is 0
+                if (rating === 0) {
+                    console.log(`Product rating for productId ${productId} is 0, skipping update`);
+                    continue;
+                }
+    
+                const product = await ProductModel.findById(productId);
+                if (!product) continue;
+    
+                // Update product rating
+                product.rating.total += rating;
+                product.rating.count += 1;
+                product.rating.average = product.rating.total / product.rating.count;
+    
+                await product.save();
+                updatedProducts.push(product);
+    
+                // Update the `hasRatedProduct` flag for the specific product in the order
+                await OrderModel.updateOne(
+                    { _id: orderId, "items.productId": productId },
+                    { $set: { "items.$.hasRatedProduct": true } }
+                );
+            }
+    
+            return updatedProducts;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+    
 
 }
 

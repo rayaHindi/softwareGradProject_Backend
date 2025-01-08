@@ -1,6 +1,7 @@
 const mongoose = require('mongoose'); // Import mongoose
 const jwt = require("jsonwebtoken");
 const storeService = require('../services/store.services');
+const storeModel = require('../model/store.model');
 const categoryModel = require('../model/category.model'); // Import Category Model
 const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
@@ -72,7 +73,6 @@ exports.register = async (req, res) => {
         });
     }
 };
-
 exports.getStoreDetails = async (req, res) => {
     try {
         const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
@@ -83,10 +83,10 @@ exports.getStoreDetails = async (req, res) => {
             storeName: store.storeName,
             contactEmail: store.contactEmail,
             phoneNumber: store.phoneNumber,
-            city: store.city?.name, // Include city
-            category: store.category?.name,
-            logo:store.logo,
-
+            city: store.city?.name, // Include city name
+            category: store.category?.name, // Include category name
+            logo: store.logo,
+            allowSpecialOrders: store.allowSpecialOrders,
         });
     } catch (error) {
         res.status(500).json({
@@ -95,6 +95,8 @@ exports.getStoreDetails = async (req, res) => {
         });
     }
 };
+
+
 exports.getDeliveryCities = async (req, res) => {
     try {
         const storeId = req.user._id; // Assuming middleware sets req.user with the store ID
@@ -196,3 +198,78 @@ exports.getStoresByCity = async (req, res) => {
     }
 };
 */
+
+exports.getAllStores = async (req, res) => {
+    try {
+        const stores = await storeService.getAllStores();
+        console.log("Stores returned successfully:", stores);
+
+        res.status(200).json({ status: true, stores });
+    } catch (error) {
+        res.status(500).json({ status: false, message: error.message });
+    }
+};
+
+exports.checkIfAllowSpecialOrders = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Store ID passed as a URL parameter
+
+        /*        // Validate storeId
+                if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+                    return res.status(400).json({
+                        status: false,
+                        message: 'Invalid or missing store ID',
+                    });
+                }*/
+
+        // Fetch the store and retrieve allowSpecialOrders
+        const store = await storeModel.findById(storeId).select('allowSpecialOrders');
+
+        if (!store) {
+            return res.status(404).json({
+                status: false,
+                message: 'Store not found',
+            });
+        }
+
+        // Return the allowSpecialOrders field
+        res.status(200).json({
+            status: true,
+            message: 'Store information fetched successfully',
+            data: {
+                allowSpecialOrders: store.allowSpecialOrders,
+            },
+        });
+    } catch (err) {
+        console.error('Error fetching allowSpecialOrders:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Internal server error',
+            error: err.message,
+        });
+    }
+};
+exports.rateStore = async (req, res) => {
+    try {
+        console.log('in updateStoreRating controller');
+
+        const { storeId, storeRating, orderId } = req.body;
+
+        if (!storeId || !storeRating || !orderId) {
+            return res.status(400).json({ error: 'Store ID, rating, and order ID are required' });
+        }
+        console.log('in updateStoreRating service before');
+
+        const updatedStore = await storeService.updateStoreRating(storeId, storeRating, orderId);
+        console.log('in updateStoreRating after');
+
+        if (!updatedStore) {
+            return res.status(404).json({ error: 'Store not found' });
+        }
+
+        res.status(200).json({ message: 'Store rating updated successfully', data: updatedStore });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};

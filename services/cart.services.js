@@ -166,6 +166,37 @@ class CartServices {
         }
     }
 
+    static async removeOrderedItems(userId, orderedItems) {
+        try {
+            // Normalize orderedItems to always be an array
+            const itemsToRemove = Array.isArray(orderedItems) ? orderedItems : [orderedItems];
+    
+            // Extract product IDs from itemsToRemove
+            const productIds = itemsToRemove.map((item) => item.productId || item); // Support passing just IDs
+    
+            const updatedCart = await CartModel.findOneAndUpdate(
+                { userId },
+                {
+                    $pull: {
+                        items: {
+                            productId: { $in: productIds }, // Match any product IDs in the list
+                        },
+                    },
+                },
+                { new: true }
+            );
+    
+            if (!updatedCart) {
+                throw new Error('Cart not found or update failed.');
+            }
+    
+            return updatedCart;
+        } catch (error) {
+            console.error('Error removing ordered items from cart:', error);
+            throw new Error('Unable to update cart');
+        }
+    }
+    
 }
 
 module.exports = CartServices;

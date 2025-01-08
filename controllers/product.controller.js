@@ -1,4 +1,6 @@
 const ProductServices = require('../services/product.services.js');
+const StoreServices = require('../services/store.services.js'); // You may create this if needed
+
 const mongoose = require('mongoose');
 
 exports.addNewProduct = async (req, res) => {
@@ -27,7 +29,7 @@ exports.getAllProducts = async (req, res) => {
     try {
         // Fetch all products using the service
         const products = await ProductServices.getAllProducts();
-        console.log("Products returned successfully:", products);
+        //console.log("Products returned successfully:", products);
         // Send the products back as a JSON response
         res.status(200).json(products);
     } catch (error) {
@@ -101,27 +103,37 @@ exports.deleteProduct = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 exports.getProductsByStoreIdForOwner = async (req, res) => {
     try {
         console.log('in getProductsByStoreId for OWNER');
-        // const { storeId } = req.query;
         const storeId = req.user._id;
-        console.log('storeId: ');
-        console.log(storeId);
+        console.log('storeId: ', storeId);
+
         // Validate storeId
         if (!mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({ status: false, message: 'Invalid store ID' });
         }
 
+        // Fetch store details to get `allowSpecialOrders`
+        const store = await StoreServices.getStoreById(storeId);
+        if (!store) {
+            return res.status(404).json({ status: false, message: 'Store not found' });
+        }
+
         // Call the service method to fetch products by store ID
         const products = await ProductServices.getProductsByStoreId(storeId);
-        console.log("Products fetched successfully: ");
-        console.log(products);
+        console.log("Products fetched successfully: ", products);
+
         res.status(200).json({
             status: true,
             message: 'Products fetched successfully',
-            data: products,
+            data: {
+                products,
+                allowSpecialOrders: store.allowSpecialOrders, // Include `allowSpecialOrders`
+            },
         });
+
     } catch (err) {
         console.error('Error fetching products:', err);
         res.status(500).json({
@@ -131,6 +143,7 @@ exports.getProductsByStoreIdForOwner = async (req, res) => {
         });
     }
 };
+
 
 exports.getProductsByStoreIdForUsers = async (req, res) => {
     try {
@@ -192,5 +205,73 @@ exports.reduceQuantity = async (req, res) => {
     } catch (error) {
         console.error('Error reducing product quantity:', error.message);
         res.status(500).json({ message: 'Error reducing product quantity', error: error.message });
+    }
+};
+exports.getMostSearched = async (req, res) => {
+    try {
+        // Fetch most searched products and stores
+        const topProducts = await ProductServices.getMostSearchedProducts();
+        const topStores = await StoreServices.getMostSearchedStores();
+
+        res.status(200).json({
+            success: true,
+            stores: topStores,
+            products: topProducts,
+
+        });
+    } catch (error) {
+        console.error('Error fetching most searched items:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+exports.incrementSearchCount = async (req, res) => {
+    try {
+        const { id, type } = req.body;
+
+        if (!id || !type) {
+            return res.status(400).json({ success: false, message: 'Invalid parameters' });
+        }
+
+        if (type === 'product') {
+            await ProductServices.incrementProductSearchCount(id);
+        } else if (type === 'store') {
+            await StoreServices.incrementStoreSearchCount(id);
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid type parameter' });
+        }
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('Error incrementing search count:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+
+exports.rateProduct = async (req, res) => {
+    try {
+        const { products,orderId } = req.body;
+
+        if (!products || !Array.isArray(products)) {
+            return res.status(400).json({ error: 'Products array is required' });
+        }
+
+        const updatedProducts = await ProductServices.updateProductRatings(products,orderId);
+
+        if (!updatedProducts) {
+            return res.status(404).json({ error: 'One or more products not found' });
+        }
+
+        res.status(200).json({ message: 'Product ratings updated successfully', data: updatedProducts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };

@@ -61,6 +61,7 @@ class CategoryServices {
             categories.forEach(category => {
                 result[category.name] = category.stores.map(store => ({
                     storeName: store.storeName,
+                    logo: store.logo,
                     contactEmail: store.contactEmail,
                     phoneNumber: store.phoneNumber,
                 }));
@@ -97,6 +98,8 @@ class CategoryServices {
                 contactEmail: store.contactEmail,
                 phoneNumber: store.phoneNumber,
                 logo: store.logo,
+                city: store.city,
+                deliveryCities: store.deliveryCities,
             }));
         } catch (error) {
             console.error('Error fetching stores by category:', error);

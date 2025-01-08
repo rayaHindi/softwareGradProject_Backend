@@ -358,3 +358,117 @@ exports.getCreditCardData = async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+/*
+exports.addFavoriteStore = async (req, res) => {
+    const userId = req.user._id;
+    const { storeId } = req.params;
+
+    try {
+        const updatedUser = await UserServices.addFavoriteStore(userId, storeId);
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        console.log("Store added to favorites");
+        res.status(200).json({ success: true, message: "Store added to favorites", user: updatedUser });
+    } catch (error) {
+        console.error("Error adding favorite store:", error);
+        res.status(500).json({ success: false, message: "Failed to add store to favorites" });
+    }
+};
+exports.removeFavoriteStore = async (req, res) => {
+    const userId = req.user._id; // Extracted from auth middleware
+    const { storeId } = req.params;
+
+    try {
+        // Call the service to remove the store from the favorites
+        const updatedUser = await UserServices.removeFavoriteStore(userId, storeId);
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Store removed from favorites",
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Error removing favorite store:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove store from favorites",
+        });
+    }
+};
+*/
+exports.addToWishlist = async (req, res) => {
+    const userId = req.user._id; // Extracted from middleware
+    const { productId } = req.params;
+
+    try {
+        const updatedUser = await UserServices.addToWishlist(userId, productId);
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Product added to wishlist", user: updatedUser });
+    } catch (error) {
+        console.error("Error adding product to wishlist:", error);
+        res.status(500).json({ success: false, message: "Failed to add product to wishlist" });
+    }
+};
+
+exports.removeFromWishlist = async (req, res) => {
+    const userId = req.user._id; // Extracted from middleware
+    const { productId } = req.params;
+
+    try {
+        const updatedUser = await UserServices.removeFromWishlist(userId, productId);
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Product removed from wishlist", user: updatedUser });
+    } catch (error) {
+        console.error("Error removing product from wishlist:", error);
+        res.status(500).json({ success: false, message: "Failed to remove product from wishlist" });
+    }
+};
+exports.checkIfInWishlist = async (req, res) => {
+    console.log('checkIfInWishlist');
+    const userId = req.user._id;
+    const { productId } = req.params;
+
+    try {
+        const isInWishlist = await UserServices.checkIfInWishlist(userId, productId);
+        res.status(200).json({ success: true, isInWishlist });
+    } catch (error) {
+        console.error("Error checking wishlist:", error);
+        res.status(500).json({ success: false, message: "Failed to check wishlist" });
+    }
+};
+exports.getWishList = async (req, res) => {
+    console.log("Fetching user's wishlist");
+    const userId = req.user._id;
+
+    try {
+        const wishlistProducts = await UserServices.getWishList(userId);
+        res.status(200).json({ success: true, products: wishlistProducts });
+    } catch (error) {
+        console.error("Error fetching wishlist:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch wishlist" });
+    }
+};
+exports.storesOfFavCategories = async (req, res) => {
+    const userId = req.user._id;
+    try {
+        const recommendedStores = await UserServices.getstoresOfFavCategories(userId);
+        res.status(200).json({ success: true, stores: recommendedStores });
+    } catch (error) {
+        console.error("Error fetching recommended stores:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch recommended stores" });
+    }
+};
