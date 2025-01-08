@@ -21,5 +21,12 @@ router.get('/getDelivery-citiesByID/:storeId', StoreController.getDeliveryCities
 router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateDeliveryCities);
 
 
+
 router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
+
+router.get('/getAllStores',StoreController.getAllStores);
+router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken,StoreController.checkIfAllowSpecialOrders);
+
+router.post('/rateStore', authenticateToken, StoreController.rateStore);
+
 module.exports = router;

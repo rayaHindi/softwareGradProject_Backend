@@ -1,6 +1,10 @@
 //user.services.js
 //In services, all the database operation happens like fetching, Insertion, Deletion.
 const UserModel = require("../model/user.model");
+const StoreModel = require("../model/store.model");
+const CategoryModel =require("../model/category.model");
+const ProductModel =require("../model/product.model");
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 
@@ -181,9 +185,146 @@ class UserServices {
             throw error;
         }
     }
+    /*
+        static async addFavoriteStore(userId, storeId) {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $addToSet: { favStores: storeId } }, // Prevent duplicates
+                { new: true }
+            );
+        }
+        static async removeFavoriteStore(userId, storeId) {
+            try {
+                return await UserModel.findByIdAndUpdate(
+                    userId,
+                    { $pull: { favStores: storeId } }, // Use $pull to remove the storeId from the favStores array
+                    { new: true } // Return the updated user document
+                );
+            } catch (error) {
+                throw error;
+            }
+        }
+        */
+
+    static async addToWishlist(userId, productId) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $addToSet: { wishlist: productId } }, // Prevent duplicates
+                { new: true }
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async removeFromWishlist(userId, productId) {
+        try {
+            return await UserModel.findByIdAndUpdate(
+                userId,
+                { $pull: { wishlist: productId } }, // Remove the productId from wishlist
+                { new: true }
+            );
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async checkIfInWishlist(userId, productId) {
+        try {
+            const user = await UserModel.findById(userId).select("wishlist");
+            if (!user) throw new Error("User not found");
+            return user.wishlist.includes(productId); // Check if product exists in wishlist
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getWishList(userId) {
+        try {
+            const user = await UserModel.findById(userId)
+                .populate({
+                    path: 'wishlist', // Populate wishlist (assumes wishlist contains product IDs)
+                    model: 'product',
+                    populate: {
+                        path: 'store', // Populate store details within each product
+                        select: 'storeName logo', // Only include storeName and logo
+                    },
+                });
+
+            console.log(user);
 
 
+            if (!user) throw new Error("User not found");
 
+            return user.wishlist.flat(); // Return the populated wishlist
+        } catch (error) {
+            throw error;
+        }
+    }
+    static async getstoresOfFavCategories(userId) {
+        try {
+            // Fetch the user's selected categories or genres
+            const user = await UserModel.findById(userId).select('selectedGenres');
+            if (!user || !user.selectedGenres || user.selectedGenres.length === 0) {
+                throw new Error('No genres selected for this user.');
+            }
+    
+            const genres = user.selectedGenres;
+    
+            // Fetch the IDs and other details of the categories based on their names
+            const categories = await CategoryModel.find({ name: { $in: genres } })
+                .select('_id name image'); // Include category name and image
+            if (!categories || categories.length === 0) {
+                throw new Error('No matching categories found for the selected genres.');
+            }
+    
+            const categoryIds = categories.map((category) => category._id);
+    
+            // Divide the 10-store limit equally across the selected categories
+            const storesPerCategory = Math.ceil(10 / categoryIds.length);
+    
+            let recommendedStores = [];
+    
+            for (const category of categories) {
+                const stores = await StoreModel.find({ category: category._id }) // Find stores by category ID
+                    .select('_id storeName logo category') // Include category in the store data
+                    .limit(storesPerCategory); // Limit results per category
+    
+                // Add category details and filter for in-stock products for each store
+                const enrichedStores = await Promise.all(stores.map(async (store) => {
+                    const inStockProducts = await ProductModel.find({
+                        store: store._id,
+                        inStock: true, // Only include in-stock products
+                    }).select('_id name price image'); // Include relevant product fields
+                    
+                    return {
+                        ...store.toObject(),
+                        category: {
+                            _id: category._id,
+                            name: category.name,
+                            image: category.image,
+                        },
+                        products: inStockProducts, // Attach in-stock products to the store
+                    };
+                }));
+    
+                recommendedStores.push(...enrichedStores);
+            }
+    
+            // Shuffle the recommendedStores array
+            recommendedStores = recommendedStores.sort(() => Math.random() - 0.5);
+    
+            // Ensure no more than 10 stores are returned overall
+            recommendedStores = recommendedStores.slice(0, 10);
+    
+            return recommendedStores; // Return the list of enriched stores
+        } catch (error) {
+            console.error('Error fetching stores by genres:', error);
+            throw new Error('Failed to fetch stores by genres.');
+        }
+    }
+    
+    
+    
 }
 
 module.exports = UserServices;

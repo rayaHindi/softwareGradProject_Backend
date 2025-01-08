@@ -20,5 +20,17 @@ router.post("/updateUserPersonalInfo", authenticateToken, UserController.updateU
 router.post("/addCreditCard", authenticateToken, UserController.addCreditCard);
 router.get("/getCreditCardData", authenticateToken, UserController.getCreditCardData);
 
+router.get("/getRecommendedStoresByCategory", authenticateToken, UserController.storesOfFavCategories);
+
+// handle favoriteStores
+//router.put('/favoriteStores/:storeId', authenticateToken, UserController.addFavoriteStore);
+//router.delete('/favoriteStores/:storeId', authenticateToken, UserController.removeFavoriteStore);
+
+// handle wishlist
+router.post('/wishlist/:productId', authenticateToken, UserController.addToWishlist);
+router.delete('/wishlist/:productId', authenticateToken, UserController.removeFromWishlist);
+router.get("/wishlist/checkIfExist/:productId", authenticateToken, UserController.checkIfInWishlist);
+router.get("/wishlist/getList", authenticateToken, UserController.getWishList);
+
 router.get("/getFullName", UserController.getFullName);
 module.exports = router;

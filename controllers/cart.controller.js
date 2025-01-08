@@ -50,16 +50,16 @@ exports.updateCartItem = async (req, res) => {
     }
 };
 
-exports.removeItem = async (req, res) => {
+exports.removeOrderedItems = async (req, res) => {
+    const { productIds } = req.body; // Array of product IDs to remove
+    const userId = req.user._id;
+
     try {
-        const { productId } = req.params;
-        const userId = req.user._id; // Extracted from middleware
-
-        const updatedCart = await CartServices.removeItemFromCart(userId, productId);
-
+        const updatedCart = await CartServices.removeOrderedItems(userId, productIds);
         res.status(200).json({ success: true, cart: updatedCart });
     } catch (error) {
-        console.error('Error removing cart item:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Error removing ordered items from cart:', error);
+        res.status(500).json({ success: false, message: 'Failed to update cart' });
     }
 };
+
