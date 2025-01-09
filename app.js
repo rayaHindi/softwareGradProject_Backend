@@ -13,6 +13,7 @@ const advertisementRoutes = require("./routes/advertisement.routes");
 const userActivityRoutes =require('./routes/userActivity.routes');
 const searchRoutes =require('./routes/search.routes');
 const categorySuggestion =require('./routes/categorySuggestion.routes');
+const subscriptionPlan =require('./routes/SubscriptionPlan.routes');
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
@@ -34,7 +35,7 @@ app.use("/advertisement", advertisementRoutes);
 app.use("/userActivity", userActivityRoutes);
 app.use("/search", searchRoutes);
 app.use("/categorySuggestion", categorySuggestion);
-
+app.use("/subscriptionPlan",subscriptionPlan);
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);

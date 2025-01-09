@@ -114,7 +114,22 @@ const storeSchema = new Schema({
         type: Number,
         default: 0,
 
-    }
+    },
+    chosenSubscriptionPlan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SubscriptionPlan",
+        required: false
+    }, // Reference to subscription plans
+    visaCard: {
+        cardNumber: { type: String, required: false },
+        expiryMonth: { type: String, required: false },
+        expiryYear: { type: String, required: false },
+        cardCode: { type: String, required: false },
+        firstName: { type: String, required: false },
+        lastName: { type: String, required: false },
+    },
+    subscriptionExpiresOn: { type: Date, required: false }, // Subscription expiry date
+    autoRenew: { type: Boolean, default: false }, // Flag for auto-renewal
 
 });
 

@@ -24,9 +24,12 @@ router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateD
 
 router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
 
-router.get('/getAllStores',StoreController.getAllStores);
-router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken,StoreController.checkIfAllowSpecialOrders);
+router.get('/getAllStores', StoreController.getAllStores);
+router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken, StoreController.checkIfAllowSpecialOrders);
 
 router.post('/rateStore', authenticateToken, StoreController.rateStore);
+router.post("/chooseSubscription", authenticateToken, StoreController.chooseSubscription);
+router.get('/getSubscriptionDetails', authenticateToken, StoreController.getSubscriptionDetails);
+router.post('/renew-subscription', authenticateToken, StoreController.renewSubscription);
 
 module.exports = router;
