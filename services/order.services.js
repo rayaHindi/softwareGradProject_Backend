@@ -77,7 +77,7 @@ class OrderServices {
                 };
             });
 
-            console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
+           // console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
             return formattedOrders;
         } catch (error) {
             console.error('Error fetching orders for store:', error.message);
@@ -108,7 +108,7 @@ class OrderServices {
                     }
                 }
             }
-            console.log(orders);
+          //  console.log(orders);
 
             return orders;
         } catch (error) {
@@ -151,11 +151,11 @@ class OrderServices {
 
             // Update status of items for the given store
             order.items.forEach((item) => {
-                console.log('Item storeId:', item.storeId.toString());
-                console.log('Provided storeId:', storeId);
+            //    console.log('Item storeId:', item.storeId.toString());
+             //   console.log('Provided storeId:', storeId);
                 if (item.storeId.toString() === storeId) {
                     item.storeStatus = newStatus;
-                    console.log('Updated storeStatus:', item.storeStatus);
+               //     console.log('Updated storeStatus:', item.storeStatus);
                     isUpdated = true;
                 }
             });

@@ -14,6 +14,8 @@ const userActivityRoutes =require('./routes/userActivity.routes');
 const searchRoutes =require('./routes/search.routes');
 const categorySuggestion =require('./routes/categorySuggestion.routes');
 const subscriptionPlan =require('./routes/SubscriptionPlan.routes');
+const fcmToken =require('./routes/fcmToken.routes');
+const notification = require('./routes/notification.routes');
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
@@ -41,6 +43,8 @@ app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);
 
 app.use("/profile", profileRoutes);
+app.use('/fcmToken', fcmToken);
+app.use('/notification', notification);
 
 require('./tasks/expireAdvertisements');
 
