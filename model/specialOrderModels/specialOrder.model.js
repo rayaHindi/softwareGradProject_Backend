@@ -1,12 +1,16 @@
+const mongoose = require('mongoose');
+const db = require('../../config/db');
+const { Schema } = mongoose;
+
 const specialOrderSchema = new Schema({
     customerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user', // References the user placing the order
+        ref: 'user',
         required: true,
     },
     storeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'store', // References the store the order is for
+        ref: 'store',
         required: true,
     },
     orderDate: {
@@ -17,23 +21,22 @@ const specialOrderSchema = new Schema({
         {
             optionId: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'storeSpecialOrderOption', // References the selected option
+                ref: 'storeSpecialOrderOption',
                 required: true,
             },
-            selectedChoices: [
+            selectedCustomFields: [
                 {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'specialOrderChoice', // References the selected choices
+                    fieldId: { type: String, required: true }, // Corresponds to CustomField.id
+                    selectedOptions: [String], // For dropdown and checkbox
+                    customValue: String, // For text, number, date, imageUpload
+                    extraCost: { type: Number, min: 0, default: 0 }, // Extra cost based on selection
                 },
             ],
-            additionalFields: {
-                size: { type: String, trim: true }, // Optional: Size (e.g., Small, Medium, Large)
-                quantity: { type: Number, min: 1, default: 1 },
-                notes: { type: String, trim: true }, // Optional: Custom notes
-                imageUrl: { type: String }, // Optional: Uploaded image URL
-            },
+            requiresPhotoUpload: { type: Boolean, default: false },
+            photoUploadPrompt: { type: String },
+            photoUrl: { type: String }, // URL of the uploaded photo
             totalPrice: {
-                type: Number, // Total price for this item (including choices)
+                type: Number, // Total price for this item (base + extra costs)
                 required: true,
             },
         },
@@ -53,5 +56,6 @@ const specialOrderSchema = new Schema({
     },
 });
 
-const SpecialOrderModel = db.model('specialOrder', specialOrderSchema);
-module.exports = SpecialOrderModel;
+const specialOrder = db.model( 'specialOrder', specialOrderSchema );
+module.exports = specialOrder;
+

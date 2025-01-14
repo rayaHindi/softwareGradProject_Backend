@@ -16,6 +16,8 @@ const categorySuggestion =require('./routes/categorySuggestion.routes');
 const subscriptionPlan =require('./routes/SubscriptionPlan.routes');
 const fcmToken =require('./routes/fcmToken.routes');
 const notification = require('./routes/notification.routes');
+const specialOrder = require('./routes/specialOrder.routes');
+const storeSpecialOrderOption = require('./routes/storeSpecialOrderOption.routes');
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
@@ -41,6 +43,8 @@ app.use("/subscriptionPlan",subscriptionPlan);
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);
+app.use('/specialOrder', specialOrder);
+app.use('/storeSpecialOrderOption', storeSpecialOrderOption);
 
 app.use("/profile", profileRoutes);
 app.use('/fcmToken', fcmToken);
