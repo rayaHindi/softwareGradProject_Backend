@@ -8,7 +8,10 @@ const { Schema } = mongoose;
 const CustomFieldSchema = new Schema({
     id: { type: String, required: true },
     label: { type: String, required: true },
-    type: { type: String, enum: ['text', 'number', 'dropdown', 'checkbox', 'imageUpload', 'date'], required: true },
+    type: {
+        type: String, enum: ['text', 'number', 'dropdown', 'checkbox', 'date'], // Removed 'imageUpload'
+        required: true
+    },
     isRequired: { type: Boolean, default: false },
     options: [
         {

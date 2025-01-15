@@ -39,17 +39,29 @@ exports.createStoreSpecialOrderOption = async (req, res) => {
     }
 };
 
+
 // Get all Special Order Options for a specific store
 exports.getStoreSpecialOrderOptions = async (req, res) => {
     try {
-        const { storeId } = req.params;
+        let storeId = req.params.storeId || req.query.storeId || req.user._id;
+        console.log(`in getStoreSpecialOrderOptions ${storeId}`);
+        // If storeId is not provided in params or query, use the authenticated user's storeId
+        if (!storeId) {
+            if (req.user && req.user.storeId) {
+                storeId = req.user.storeId;
+            } else {
+                return res.status(400).json({ message: 'StoreId not provided and user is not associated with a store.' });
+            }
+        }
 
         // Validate storeId
         if (!mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({ message: 'Invalid storeId.' });
         }
 
+        // Fetch the special order options for the store
         const options = await StoreSpecialOrderOptionModel.find({ storeId });
+        console.log(`options ${options}`);
 
         res.status(200).json(options);
     } catch (error) {

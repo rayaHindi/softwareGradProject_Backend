@@ -6,7 +6,9 @@ const storeSpecialOrderOptionController = require('../controllers/storeSpecialOr
 const authenticateToken = require('../middleware/authMiddleware');
 
 router.post('/create',authenticateToken, storeSpecialOrderOptionController.createStoreSpecialOrderOption);
-router.get('/store/:storeId',authenticateToken, storeSpecialOrderOptionController.getStoreSpecialOrderOptions);
+router.get('/getStoreOptions/:storeId',authenticateToken, storeSpecialOrderOptionController.getStoreSpecialOrderOptions);
+router.get('/getStoreOptions',authenticateToken, storeSpecialOrderOptionController.getStoreSpecialOrderOptions);
+
 router.put('/update/:optionId',authenticateToken, storeSpecialOrderOptionController.updateStoreSpecialOrderOption);
 router.delete('/delete/:optionId',authenticateToken, storeSpecialOrderOptionController.deleteStoreSpecialOrderOption);
 
