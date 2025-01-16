@@ -469,3 +469,36 @@ exports.renewSubscription = async (req, res) => {
         });
     }
 };
+
+// Controller Method to Get Store Category
+exports.getStoreCategory = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Store ID passed as a URL parameter
+
+        // Validate store ID
+        if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: "Invalid store ID" });
+        }
+
+        // Fetch the store and populate the 'category' field
+        const store = await storeModel.findById(storeId).populate('category', 'name');
+
+        if (!store) {
+            return res.status(404).json({ status: false, message: "Store not found" });
+        }
+
+        if (!store.category) {
+            return res.status(404).json({ status: false, message: "Store category not set" });
+        }
+
+        // Respond with the category name
+        res.status(200).json({
+            status: true,
+            category: store.category.name, // You can return more details if needed
+        });
+
+    } catch (error) {
+        console.error("Error fetching store category:", error);
+        res.status(500).json({ status: false, message: "Internal server error", error: error.message });
+    }
+};

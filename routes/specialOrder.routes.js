@@ -7,8 +7,9 @@ const authenticateToken = require('../middleware/authMiddleware');
 
 
 router.post('/create',authenticateToken, specialOrderController.createSpecialOrder);
-router.get('/store/:storeId',authenticateToken, specialOrderController.getStoreSpecialOrders);
+router.get('/getStoreSpecialOrders',authenticateToken, specialOrderController.getStoreSpecialOrders);
 router.get('/getByID/:orderId',authenticateToken, specialOrderController.getSpecialOrderById);
 router.put('/updateStatus/:orderId',authenticateToken, specialOrderController.updateSpecialOrderStatus);
+router.get('/getUserSpecialOrders', authenticateToken, specialOrderController.getUserSpecialOrders);
 
 module.exports = router;

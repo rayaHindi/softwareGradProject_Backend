@@ -43,19 +43,24 @@ const specialOrderSchema = new Schema({
     ],
     status: {
         type: String,
-        enum: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'In Progress', 'Confirmed', 'Completed', 'Cancelled'],
         default: 'Pending',
     },
     totalPrice: {
         type: Number, // Total price for the whole order
         required: true,
     },
+    estimatedPrice: {
+        type: Number, // Estimated price based on user selections
+        required: true,
+    },
     notes: {
         type: String, // General notes for the order
         trim: true,
     },
+}, {
+    timestamps: true, // Adds createdAt and updatedAt fields
 });
 
-const specialOrder = db.model( 'specialOrder', specialOrderSchema );
-module.exports = specialOrder;
-
+const SpecialOrder = db.model('SpecialOrder', specialOrderSchema);
+module.exports = SpecialOrder;
