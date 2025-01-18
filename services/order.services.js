@@ -40,7 +40,7 @@ class OrderServices {
     static async getOrdersByStoreId(storeId) {
         try {
             const orders = await OrderModel.find({ 'items.storeId': storeId })
-                .populate('userId', 'name email') // Populate user details
+                .populate('userId', 'firstName lastName email') // Populate user details
                 .populate('items.productId', 'name image'); // Populate product details
 
             // Filter and format the orders for the given store

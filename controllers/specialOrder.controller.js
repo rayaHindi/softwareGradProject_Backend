@@ -8,6 +8,7 @@ const calculateOrderPrice = require('../utils/calculateOrderPrice'); // Ensure t
 exports.createSpecialOrder = async (req, res) => {
     try {
         const { optionId, formData, estimatedPrice, status } = req.body;
+        console.log('req.body:', req.body);
 
         // Validate required fields
         if (!optionId || !formData || typeof estimatedPrice !== 'number') {
@@ -86,8 +87,10 @@ exports.createSpecialOrder = async (req, res) => {
                     break;
             }
 
+            // Add the field's data to selectedCustomFields
             selectedCustomFields.push({
                 fieldId,
+                label: customField.label, // Include the field's label
                 selectedOptions,
                 customValue,
                 extraCost,
@@ -97,7 +100,6 @@ exports.createSpecialOrder = async (req, res) => {
         }
 
         // Calculate totalPrice based on subtotal and quantity
-        // Assuming there's a quantity field in formData
         const quantityField = option.customFields.find(cf => cf.type === 'number');
         const quantity = quantityField ? parseFloat(formData[quantityField.id]) || 1.0 : 1.0;
         const totalPrice = subtotal * quantity;
@@ -132,6 +134,7 @@ exports.createSpecialOrder = async (req, res) => {
         res.status(500).json({ message: 'Server error.' });
     }
 };
+
 // Get all Special Orders for a specific store
 exports.getStoreSpecialOrders = async (req, res) => {
     try {
@@ -143,7 +146,7 @@ exports.getStoreSpecialOrders = async (req, res) => {
         }
 
         const orders = await SpecialOrderModel.find({ storeId })
-            .populate('customerId', 'name email') // Adjust fields as needed
+            .populate('customerId', 'firstName lastName email') // Adjust fields as needed
             .populate({
                 path: 'orderItems.optionId',
                 model: 'storeSpecialOrderOption',

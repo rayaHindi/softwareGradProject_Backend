@@ -26,7 +26,8 @@ const specialOrderSchema = new Schema({
             },
             selectedCustomFields: [
                 {
-                    fieldId: { type: String, required: true }, // Corresponds to CustomField.id
+                    fieldId: { type: String, required: true }, 
+                    label: { type: String, required: true },// Corresponds to CustomField.id
                     selectedOptions: [String], // For dropdown and checkbox
                     customValue: String, // For text, number, date, imageUpload
                     extraCost: { type: Number, min: 0, default: 0 }, // Extra cost based on selection
