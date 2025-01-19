@@ -438,7 +438,7 @@ exports.renewSubscription = async (req, res) => {
         const storeId = req.user._id;
 
         // Validate store
-        const store = await Store.findById(storeId).populate('chosenSubscriptionPlan');
+        const store = await storeModel.findById(storeId).populate('chosenSubscriptionPlan');
         if (!store || !store.chosenSubscriptionPlan) {
             return res.status(404).json({
                 status: false,
@@ -500,5 +500,107 @@ exports.getStoreCategory = async (req, res) => {
     } catch (error) {
         console.error("Error fetching store category:", error);
         res.status(500).json({ status: false, message: "Internal server error", error: error.message });
+    }
+};
+
+exports.getIfSpecialOrdersAllowed = async (req, res) => {
+    try {
+        // Assuming the authenticated user's store ID is in req.user.storeId
+        const storeId = req.user._id;
+
+        if (!storeId) {
+            return res.status(400).json({ message: "Store ID is required." });
+        }
+
+        // Find the store by ID
+        const store = await storeModel.findById(storeId);
+
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({ allowSpecialOrders: store.allowSpecialOrders });
+    } catch (error) {
+        console.error("Error fetching special orders status:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+/**
+ * Update if special orders are allowed for a store.
+ */
+exports.updateIfAllowSpecialOrder = async (req, res) => {
+    try {
+        // Assuming the authenticated user's store ID is in req.user.storeId
+        const storeId = req.user._id;
+
+        if (!storeId) {
+            return res.status(400).json({ message: "Store ID is required." });
+        }
+
+        // Validate the request body
+        const { allowSpecialOrders } = req.body;
+
+        if (typeof allowSpecialOrders !== "boolean") {
+            return res.status(400).json({ message: "Invalid input. 'allowSpecialOrders' must be a boolean." });
+        }
+
+        // Update the store's allowSpecialOrders field
+        const store = await storeModel.findByIdAndUpdate(
+            storeId,
+            { allowSpecialOrders },
+            { new: true } // Return the updated document
+        );
+
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({
+            message: "Special orders status updated successfully.",
+            allowSpecialOrders: store.allowSpecialOrders,
+        });
+    } catch (error) {
+        console.error("Error updating special orders status:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+exports.getShekelPerPoint = async (req, res) => {
+    try {
+        const storeId = req.user._id; // Assuming storeId is available in the token
+        const store = await StoreModel.findById(storeId).select('shekelPerPoint');
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+        res.status(200).json({ success: true, shekelPerPoint: store.shekelPerPoint });
+    } catch (error) {
+        console.error('Error fetching shekel per point:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch shekel per point' });
+    }
+};
+
+// Update shekel per point
+exports.updateShekelPerPoint = async (req, res) => {
+    const { shekelPerPoint } = req.body;
+    const storeId = req.user._id; // Assuming storeId is available in the token
+
+    try {
+        console.log('in update shekel point')
+        if (typeof shekelPerPoint !== 'number' || shekelPerPoint <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid shekel per point value' });
+        }
+
+        const store = await StoreModel.findById(storeId);
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+
+        store.shekelPerPoint = shekelPerPoint;
+        await store.save();
+        res.status(200).json({ success: true, message: 'Shekel per point updated successfully' });
+    } catch (error) {
+        console.error('Error updating shekel per point:', error);
+        res.status(500).json({ success: false, message: 'Failed to update shekel per point' });
     }
 };

@@ -26,7 +26,7 @@ const specialOrderSchema = new Schema({
             },
             selectedCustomFields: [
                 {
-                    fieldId: { type: String, required: true }, 
+                    fieldId: { type: String, required: true },
                     label: { type: String, required: true },// Corresponds to CustomField.id
                     selectedOptions: [String], // For dropdown and checkbox
                     customValue: String, // For text, number, date, imageUpload
@@ -44,12 +44,13 @@ const specialOrderSchema = new Schema({
     ],
     status: {
         type: String,
-        enum: ['Pending', 'In Progress', 'Confirmed', 'Completed', 'Cancelled'],
+        enum: ['Pending', 'Confirmed', 'afterCheckout' ,'Completed', 'Cancelled'],
         default: 'Pending',
     },
     totalPrice: {
         type: Number, // Total price for the whole order
         required: true,
+        default: 0,
     },
     estimatedPrice: {
         type: Number, // Estimated price based on user selections
@@ -59,6 +60,27 @@ const specialOrderSchema = new Schema({
         type: String, // General notes for the order
         trim: true,
     },
+    ifPaid: {
+        type: Boolean,
+        default: false, // Default to unread
+    },
+    deliveryDetails: {
+        city: { type: String, required: true },
+        street: { type: String, required: true },
+        contactNumber: { type: String, required: true },
+    },
+    paymentDetails: {
+        method: {
+            type: String,
+            enum: ['Cash on Delivery', 'Visa', 'Apple Pay'],
+            required: true,
+        },
+        cardNumber: {
+            type: String,
+            default: null,
+        },
+    },
+
 }, {
     timestamps: true, // Adds createdAt and updatedAt fields
 });

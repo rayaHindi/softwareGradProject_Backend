@@ -34,4 +34,11 @@ router.post("/chooseSubscription", authenticateToken, StoreController.chooseSubs
 router.get('/getSubscriptionDetails', authenticateToken, StoreController.getSubscriptionDetails);
 router.post('/renew-subscription', authenticateToken, StoreController.renewSubscription);
 
+router.get('/getIfSpecialOrdersAllowed', authenticateToken, StoreController.getIfSpecialOrdersAllowed);
+router.patch('/updateIfAllowSpecialOrder', authenticateToken, StoreController.updateIfAllowSpecialOrder);
+
+// Route to update shekel per point
+router.get('/getShekelPerPoint', authenticateToken, StoreController.getShekelPerPoint);
+router.patch('/updateShekelPerPoint', authenticateToken, StoreController.updateShekelPerPoint);
+
 module.exports = router;

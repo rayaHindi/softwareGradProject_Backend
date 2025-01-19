@@ -5,126 +5,50 @@ const mongoose = require('mongoose');
 const calculateOrderPrice = require('../utils/calculateOrderPrice'); // Ensure this utility is correctly implemented
 
 // Create a new Special Order
+// Create a new Special Order
 exports.createSpecialOrder = async (req, res) => {
     try {
-        const { optionId, formData, estimatedPrice, status } = req.body;
-        console.log('req.body:', req.body);
+        const { optionId, selectedCustomFields, estimatedPrice, status, photoUpload } = req.body;
 
-        // Validate required fields
-        if (!optionId || !formData || typeof estimatedPrice !== 'number') {
-            return res.status(400).json({ message: 'Invalid order data.' });
-        }
-
-        // Validate optionId
+        // Validate input
         if (!mongoose.Types.ObjectId.isValid(optionId)) {
             return res.status(400).json({ message: 'Invalid optionId.' });
         }
 
-        // Fetch the storeSpecialOrderOption to get storeId and other details
+        if (!Array.isArray(selectedCustomFields) || selectedCustomFields.length === 0) {
+            return res.status(400).json({ message: 'Invalid selectedCustomFields data.' });
+        }
+
+        if (typeof estimatedPrice !== 'number' || estimatedPrice <= 0) {
+            return res.status(400).json({ message: 'Invalid estimatedPrice.' });
+        }
+
+        // Fetch option details
         const option = await StoreSpecialOrderOptionModel.findById(optionId);
         if (!option) {
             return res.status(404).json({ message: 'Special Order Option not found.' });
         }
 
-        const storeId = option.storeId; // Assuming StoreSpecialOrderOptionModel has a storeId field
+        const customerId = req.user._id; // Assume authentication middleware sets req.user
+        const storeId = option.storeId;
 
-        // Assume customerId is obtained from the authenticated user
-        const customerId = req.user._id; // Ensure your authentication middleware sets req.user
-
-        const selectedCustomFields = [];
-        let subtotal = 0.0;
-
-        // Iterate through each field in formData
-        for (const [fieldId, value] of Object.entries(formData)) {
-            // Find the corresponding field in the option's customFields
-            const customField = option.customFields.find(cf => cf.id === fieldId);
-            if (!customField) {
-                continue; // Skip unknown fields
-            }
-
-            let selectedOptions = [];
-            let customValue = '';
-            let extraCost = 0.0;
-
-            switch (customField.type) {
-                case 'dropdown':
-                    if (value) {
-                        selectedOptions = [value];
-                        const selectedOption = customField.options.find(opt => opt.value === value);
-                        if (selectedOption && selectedOption.extraCost) {
-                            extraCost += selectedOption.extraCost;
-                        }
-                    }
-                    break;
-                case 'checkbox':
-                    if (Array.isArray(value)) {
-                        selectedOptions = value;
-                        value.forEach(val => {
-                            const selectedOption = customField.options.find(opt => opt.value === val);
-                            if (selectedOption && selectedOption.extraCost) {
-                                extraCost += selectedOption.extraCost;
-                            }
-                        });
-                    }
-                    break;
-                case 'text':
-                case 'number':
-                case 'date':
-                    customValue = value.toString();
-                    // Assuming these fields might have a base extra cost
-                    if (customField.extraCost) {
-                        extraCost += customField.extraCost;
-                    }
-                    break;
-                case 'imageUpload':
-                    customValue = value.toString(); // URL or path
-                    // If image upload has an extra cost, handle it
-                    if (customField.extraCost) {
-                        extraCost += customField.extraCost;
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            // Add the field's data to selectedCustomFields
-            selectedCustomFields.push({
-                fieldId,
-                label: customField.label, // Include the field's label
-                selectedOptions,
-                customValue,
-                extraCost,
-            });
-
-            subtotal += extraCost;
-        }
-
-        // Calculate totalPrice based on subtotal and quantity
-        const quantityField = option.customFields.find(cf => cf.type === 'number');
-        const quantity = quantityField ? parseFloat(formData[quantityField.id]) || 1.0 : 1.0;
-        const totalPrice = subtotal * quantity;
-
-        // Construct orderItems
+        // Construct order items
         const orderItems = [
             {
                 optionId,
                 selectedCustomFields,
-                requiresPhotoUpload: option.requiresPhotoUpload || false,
-                photoUploadPrompt: option.photoUploadPrompt || '',
-                photoUrl: formData.photoUpload || '',
-                totalPrice,
+                photoUrl: photoUpload || '',
+                estimatedPrice,
             },
         ];
 
-        // Create the Special Order
+        // Create and save the special order
         const newOrder = new SpecialOrderModel({
             customerId,
             storeId,
             orderItems,
             status: status || 'Pending',
             estimatedPrice,
-            totalPrice, // Initially set to estimatedPrice; can be updated upon confirmation
-            notes: formData.notes || '', // Assuming notes are part of formData
         });
 
         const savedOrder = await newOrder.save();
@@ -135,7 +59,7 @@ exports.createSpecialOrder = async (req, res) => {
     }
 };
 
-// Get all Special Orders for a specific store
+
 exports.getStoreSpecialOrders = async (req, res) => {
     try {
         const storeId = req.user._id;
@@ -145,25 +69,38 @@ exports.getStoreSpecialOrders = async (req, res) => {
             return res.status(400).json({ message: 'Invalid storeId.' });
         }
 
+        // Fetch orders with populated references
         const orders = await SpecialOrderModel.find({ storeId })
-            .populate('customerId', 'firstName lastName email') // Adjust fields as needed
+            .populate('customerId', 'firstName lastName email') // Include customer details
             .populate({
                 path: 'orderItems.optionId',
                 model: 'storeSpecialOrderOption',
-                populate: {
-                    path: 'customFields',
-                },
+                select: 'name description', // Include the name and description of the option
             });
 
-        // Debugging: Log the orders to verify structure
-        console.log(`Special Orders: ${JSON.stringify(orders)}`);
+        // Format orders to include only necessary details
+        const formattedOrders = orders.map(order => ({
+            ...order.toObject(),
+            orderItems: order.orderItems.map(item => ({
+                optionName: item.optionId?.name || 'N/A', // Include the option name
+                optionDescription: item.optionId?.description || '', // Include option description
+                selectedCustomFields: item.selectedCustomFields.map(field => ({
+                    label: field.label, // Include the field label
+                    value: field.customValue || field.selectedOptions.join(', '), // Include the value
+                })),
+                totalPrice: item.totalPrice, // Include the total price for this item
+                photoUrl: item.photoUrl || '', // Include photo URL if available
+            })),
+        }));
 
-        res.status(200).json({ specialOrders: orders }); // Removed extra array
+        console.log(formattedOrders); // Debugging formatted orders
+        res.status(200).json({ specialOrders: formattedOrders });
     } catch (error) {
         console.error('Error fetching Special Orders:', error);
         res.status(500).json({ message: 'Server error.' });
     }
 };
+
 
 
 // Get a specific Special Order by ID
@@ -198,10 +135,11 @@ exports.getSpecialOrderById = async (req, res) => {
 };
 
 // Update the status of a Special Order
+// Update the status of a Special Order and set the real price
 exports.updateSpecialOrderStatus = async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { status } = req.body;
+        const { status, realPrice } = req.body;
 
         // Validate orderId
         if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -219,7 +157,14 @@ exports.updateSpecialOrderStatus = async (req, res) => {
             return res.status(404).json({ message: 'Special Order not found.' });
         }
 
+        // Update order status
         order.status = status;
+
+        // If the real price is provided, update it
+        if (status === 'Confirmed' && typeof realPrice === 'number' && realPrice > 0) {
+            order.totalPrice = realPrice; // Set the real price as the total price
+        }
+
         order.updatedAt = Date.now();
 
         const updatedOrder = await order.save();
@@ -231,17 +176,54 @@ exports.updateSpecialOrderStatus = async (req, res) => {
 };
 
 
+
 // Get all Special Orders for the authenticated user
 exports.getUserSpecialOrders = async (req, res) => {
     try {
         const userId = req.user._id; // Ensure your auth middleware sets req.user correctly
 
         const orders = await SpecialOrderModel.find({ customerId: userId })
-            .populate('storeId', 'storeName icon'); // Populate store details as needed
+            .populate('storeId', 'storeName icon')
+            .populate({
+                path: 'orderItems.optionId', // Populate the optionId field
+                select: 'name', // Only include the 'name' field
+            }); // Populate store details as needed
 
         res.status(200).json({ orders });
     } catch (error) {
         console.error('Error fetching user special orders:', error);
         res.status(500).json({ message: 'Server error.' });
+    }
+};
+exports.markAsPaid = async (req, res) => {
+    const { specialOrderId } = req.params; // Extract special order ID from the route
+    const { isPaid, paymentDetails, deliveryDetails } = req.body; // Extract fields from the request body
+
+    try {
+        // Fetch the order by ID
+        const order = await SpecialOrderModel.findById(specialOrderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Special order not found' });
+        }
+
+        // Update the isPaid flag, payment details, and delivery details
+        order.ifPaid = isPaid ?? order.ifPaid; // Use existing value if not provided
+        order.paymentDetails = paymentDetails || order.paymentDetails; // Use default if not provided
+        order.deliveryDetails = deliveryDetails || order.deliveryDetails;
+
+        // Update the status to "afterCheckout" if payment was successful
+        if (isPaid) {
+            order.status = 'afterCheckout';
+        }
+
+        await order.save(); // Save updated order to the database
+
+        res.status(200).json({ 
+            message: 'Special order marked as paid successfully.', 
+            updatedOrder: order 
+        });
+    } catch (error) {
+        console.error('Error marking special order as paid:', error);
+        res.status(500).json({ message: 'Failed to mark special order as paid.' });
     }
 };

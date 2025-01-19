@@ -130,6 +130,7 @@ const storeSchema = new Schema({
     },
     subscriptionExpiresOn: { type: Date, required: false }, // Subscription expiry date
     autoRenew: { type: Boolean, default: false }, // Flag for auto-renewal
+    shekelPerPoint: { type: Number, default: 20 }, // Default conversion rate
 
 });
 

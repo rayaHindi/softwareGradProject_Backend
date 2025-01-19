@@ -490,3 +490,93 @@ exports.storesOfFavCategories = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch recommended stores" });
     }
 };
+///////////////////////point system///////////////////////
+exports.addPoints = async (req, res) => {
+    const { storeId, storeName, points } = req.body;
+    const userId = req.user._id;
+
+    try {
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Check if the store already exists in the user's points
+        if (user.points.has(storeId)) {
+            user.points.get(storeId).totalPoints += points; // Increment points
+        } else {
+            // Add a new entry for the store
+            user.points.set(storeId, { storeName, totalPoints: points });
+        }
+
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Points added successfully', points: user.points });
+    } catch (error) {
+        console.error('Error adding points:', error);
+        res.status(500).json({ success: false, message: 'Failed to add points' });
+    }
+};
+
+// Remove points from a user's account for a specific store
+exports.removePoints = async (req, res) => {
+    const { storeId, points } = req.body;
+    const userId = req.user._id;
+
+    try {
+        const user = await UserModel.findById(userId);
+
+        if (!user || !user.points.has(storeId)) {
+            return res.status(404).json({ success: false, message: 'Store points not found for user' });
+        }
+
+        // Deduct points, ensuring they don't go below zero
+        const currentPoints = user.points.get(storeId).totalPoints;
+        user.points.get(storeId).totalPoints = Math.max(0, currentPoints - points);
+
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Points removed successfully', points: user.points });
+    } catch (error) {
+        console.error('Error removing points:', error);
+        res.status(500).json({ success: false, message: 'Failed to remove points' });
+    }
+};
+
+// Get all points for the user
+exports.getAllPoints = async (req, res) => {
+    const userId = req.user._id;
+
+    try {
+        const user = await UserModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        res.status(200).json({ success: true, points: user.points });
+    } catch (error) {
+        console.error('Error fetching points:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch points' });
+    }
+};
+
+// Get points for a specific store
+exports.getPointsForStore = async (req, res) => {
+    const userId = req.user._id;
+    const { storeId } = req.params;
+
+    try {
+        const user = await UserModel.findById(userId);
+
+        if (!user || !user.points.has(storeId)) {
+            return res.status(404).json({ success: false, message: 'Store points not found for user' });
+        }
+
+        res.status(200).json({ success: true, points: user.points.get(storeId) });
+    } catch (error) {
+        console.error('Error fetching points for store:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch points for store' });
+    }
+};
