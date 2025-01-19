@@ -10,15 +10,16 @@ const orderRoutes = require("./routes/order.routes");
 const cityRoutes = require("./routes/city.routes");
 const favStoresRoutes = require("./routes/favoriteStores.routes");
 const advertisementRoutes = require("./routes/advertisement.routes");
-const userActivityRoutes =require('./routes/userActivity.routes');
-const searchRoutes =require('./routes/search.routes');
-const categorySuggestion =require('./routes/categorySuggestion.routes');
+const userActivityRoutes = require('./routes/userActivity.routes');
+const searchRoutes = require('./routes/search.routes');
+const categorySuggestion = require('./routes/categorySuggestion.routes');
 
 const PostRoutes = require("./routes/post.routes");
 const { getAllPosts } = require("./controllers/post.controller");
 
 const profileRoutes = require("./routes/profile.routes");
 
+const saleRoutes = require("./routes/sales.routes");
 const app = express();
 app.use(bodyParser.json())
 
@@ -42,5 +43,7 @@ app.use('/fetchAllPosts', getAllPosts);
 app.use("/profile", profileRoutes);
 
 require('./tasks/expireAdvertisements');
+
+app.use('/sale', saleRoutes);
 
 module.exports = app;

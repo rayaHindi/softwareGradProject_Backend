@@ -324,3 +324,11 @@ exports.rateStore = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+exports.getStoreName = async (req, res) => {
+    const id = req.params.storeID;
+    console.log("store id:");
+    console.log(id);
+
+
+}

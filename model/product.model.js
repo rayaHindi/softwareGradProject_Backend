@@ -18,6 +18,11 @@ const productSchema = new Schema({
         required: [true, "Product price is required"],
         min: [0, "Price cannot be negative"],
     },
+    salePrice: {
+        type: Number,
+        required: false,
+        min: [0, "Price cannot be negative"],
+    },
     image: {
         type: String, // URL of the photo
         required: false,
@@ -102,7 +107,10 @@ const productSchema = new Schema({
          feedback: String, // User's text feedback
          createdAt: Date,
      }]*/
-
+    onSale: {
+        type: Boolean,
+        default: false
+    },
 });
 
 productSchema.pre("save", function (next) {

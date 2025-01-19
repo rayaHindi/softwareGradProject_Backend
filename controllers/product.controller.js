@@ -41,6 +41,44 @@ exports.getAllProducts = async (req, res) => {
 };
 
 
+exports.updateProductsBatch = async (req, res) => {
+    const { productUpdates } = req.body; // Expecting an array of objects { id, onSale, salePrice }
+
+    try {
+        // Validate the input
+        if (!Array.isArray(productUpdates) || productUpdates.length === 0) {
+            return res.status(400).json({ message: 'Invalid or empty product updates list.' });
+        }
+
+        // Prepare bulk update operations
+        const bulkOps = productUpdates.map((update) => {
+            const { id, onSale, salePrice } = update;
+
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw new Error(`Invalid product ID: ${id}`);
+            }
+
+            return {
+                updateOne: {
+                    filter: { _id: id },
+                    update: { $set: { onSale, salePrice, updatedAt: Date.now() } },
+                },
+            };
+        });
+
+        // Perform bulk write operation
+        const result = await ProductServices.bulkUpdateProducts(bulkOps);
+
+        res.status(200).json({
+            message: 'Products updated successfully.',
+            result,
+        });
+    } catch (error) {
+        console.error('Error updating products in batch:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 
 exports.updateProduct = async (req, res) => {
@@ -257,13 +295,13 @@ exports.incrementSearchCount = async (req, res) => {
 
 exports.rateProduct = async (req, res) => {
     try {
-        const { products,orderId } = req.body;
+        const { products, orderId } = req.body;
 
         if (!products || !Array.isArray(products)) {
             return res.status(400).json({ error: 'Products array is required' });
         }
 
-        const updatedProducts = await ProductServices.updateProductRatings(products,orderId);
+        const updatedProducts = await ProductServices.updateProductRatings(products, orderId);
 
         if (!updatedProducts) {
             return res.status(404).json({ error: 'One or more products not found' });
