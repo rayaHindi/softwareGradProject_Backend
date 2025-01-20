@@ -119,8 +119,12 @@ exports.placeOrder = async (req, res) => {
 
             storeTotals[storeId].productsTotal += storeTotal;
         });
+ // Step 6: Determine the overall orderDeliveryType
+        // If any item has deliveryType 'scheduled', set overallDeliveryType to 'scheduled', else 'instant'
+        const overallDeliveryType = items.some(item => item.deliveryType.toLowerCase() === 'scheduled') ? 'scheduled' : 'instant';
+        console.log(`Overall Delivery Type: ${overallDeliveryType}`);
 
-        // Step 6: Assign the `orderNumbers` and `storeTotals` field to the order
+        // Step 7: Assign the `orderNumbers` and `storeTotals` field to the order
         const orderData = {
             userId,
             items: items.map((item) => {
@@ -162,6 +166,8 @@ exports.placeOrder = async (req, res) => {
             storeTotals, // Include aggregated totals for each store
             deliveryPreference,
             paymentDetails,
+            orderDeliveryType: overallDeliveryType, // Set the overall delivery type
+
         };
 
         // Step 7: Create the order in the database

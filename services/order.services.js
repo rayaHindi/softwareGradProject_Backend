@@ -40,7 +40,7 @@ class OrderServices {
     static async getOrdersByStoreId(storeId) {
         try {
             const orders = await OrderModel.find({ 'items.storeId': storeId })
-                .populate('userId', 'name email') // Populate user details
+                .populate('userId', 'firstName lastName email') // Populate user details
                 .populate('items.productId', 'name image'); // Populate product details
 
             // Filter and format the orders for the given store
@@ -77,7 +77,7 @@ class OrderServices {
                 };
             });
 
-            console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
+           // console.log("Formatted Orders:", JSON.stringify(formattedOrders, null, 2)); // Log the complete response
             return formattedOrders;
         } catch (error) {
             console.error('Error fetching orders for store:', error.message);
@@ -108,7 +108,7 @@ class OrderServices {
                     }
                 }
             }
-            console.log(orders);
+          //  console.log(orders);
 
             return orders;
         } catch (error) {
@@ -136,7 +136,7 @@ class OrderServices {
     // Update item status for specific store
     static async updateItemStatus(orderId, storeId, newStatus) {
         try {
-            const order = await OrderModel.findById(orderId);
+            let order = await OrderModel.findById(orderId).populate('userId');
             console.log(`newStatus ${newStatus}`);
             if (!order) {
                 throw new Error('Order not found');
@@ -151,11 +151,11 @@ class OrderServices {
 
             // Update status of items for the given store
             order.items.forEach((item) => {
-                console.log('Item storeId:', item.storeId.toString());
-                console.log('Provided storeId:', storeId);
+            //    console.log('Item storeId:', item.storeId.toString());
+             //   console.log('Provided storeId:', storeId);
                 if (item.storeId.toString() === storeId) {
                     item.storeStatus = newStatus;
-                    console.log('Updated storeStatus:', item.storeStatus);
+               //     console.log('Updated storeStatus:', item.storeStatus);
                     isUpdated = true;
                 }
             });

@@ -6,6 +6,7 @@ const categoryModel = require('../model/category.model'); // Import Category Mod
 const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
 const StoreModel = require('../model/store.model');
+const SubscriptionPlan = require('../model/SubscriptionPlan.model');
 exports.register = async (req, res) => {
     try {
         const {
@@ -93,6 +94,7 @@ exports.getStoreDetails = async (req, res) => {
             category: store.category?.name, // Include category name
             logo: store.logo,
             allowSpecialOrders: store.allowSpecialOrders,
+            chosenSubscriptionPlan: store.chosenSubscriptionPlan,
 
         });
     } catch (error) {
@@ -332,3 +334,280 @@ exports.getStoreName = async (req, res) => {
 
 
 }
+exports.chooseSubscription = async (req, res) => {
+    try {
+        const storeId = req.user._id; // Extract the store ID from the authenticated user
+        const { subscriptionPlanId, visaCard } = req.body;
+
+        // Validate inputs
+        if (!subscriptionPlanId || !visaCard) {
+            return res.status(400).json({
+                status: false,
+                message: 'Subscription plan and visa card details are required',
+            });
+        }
+
+        // Validate the subscription plan
+        const subscriptionPlan = await SubscriptionPlan.findById(subscriptionPlanId);
+        if (!subscriptionPlan) {
+            return res.status(404).json({
+                status: false,
+                message: 'Invalid subscription plan',
+            });
+        }
+
+        // Ensure all visaCard fields are provided
+        const requiredCardFields = ['cardNumber', 'expiryMonth', 'expiryYear', 'cardCode', 'firstName', 'lastName'];
+        const missingFields = requiredCardFields.filter((field) => !visaCard[field]);
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                status: false,
+                message: `Missing card details: ${missingFields.join(', ')}`,
+            });
+        }
+
+        // Calculate subscription expiration date
+        const today = new Date();
+        const subscriptionExpiresOn = new Date(today.setMonth(today.getMonth() + subscriptionPlan.duration));
+
+        // Update the store with the chosen subscription plan, card details, and expiration date
+        const updatedStore = await storeModel.findByIdAndUpdate(
+            storeId,
+            {
+                chosenSubscriptionPlan: subscriptionPlanId,
+                visaCard,
+                subscriptionExpiresOn,
+            },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedStore) {
+            return res.status(404).json({
+                status: false,
+                message: 'Store not found',
+            });
+        }
+
+        res.status(200).json({
+            status: true,
+            message: 'Subscription plan and card details added successfully',
+            store: updatedStore,
+        });
+    } catch (error) {
+        console.error('Error choosing subscription plan:', error);
+        res.status(500).json({
+            status: false,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+exports.getSubscriptionDetails = async (req, res, next) => {
+    try {
+        const storeId = req.user._id; // Assuming you have middleware that attaches the store ID to req.user
+        if (!storeId) {
+            return res.status(404).json({ status: false, message: "Store not found." });
+        }
+
+        // Find the store and populate the chosenSubscriptionPlan
+        const store = await storeModel.findById(storeId)
+            .populate('chosenSubscriptionPlan')
+            .select('chosenSubscriptionPlan visaCard subscriptionExpiresOn');
+
+        if (!store) {
+            return res.status(404).json({ status: false, message: "Store not found." });
+        }
+
+        // Build the response object
+        const subscriptionDetails = {
+            plan: store.chosenSubscriptionPlan
+                ? {
+                    _id: store.chosenSubscriptionPlan._id,
+                    name: store.chosenSubscriptionPlan.name,
+                    price: store.chosenSubscriptionPlan.price,
+                    duration: store.chosenSubscriptionPlan.duration,
+                }
+                : null,
+            expiresOn: store.subscriptionExpiresOn || null,
+            autoRenew: false, // Adjust based on your business logic if auto-renew is implemented
+        };
+
+        res.status(200).json({ status: true, subscriptionDetails });
+    } catch (error) {
+        console.error("Error fetching subscription details:", error);
+        next(error);
+    }
+};
+
+exports.renewSubscription = async (req, res) => {
+    try {
+        const storeId = req.user._id;
+
+        // Validate store
+        const store = await storeModel.findById(storeId).populate('chosenSubscriptionPlan');
+        if (!store || !store.chosenSubscriptionPlan) {
+            return res.status(404).json({
+                status: false,
+                message: 'Subscription plan not found',
+            });
+        }
+
+        // Extend subscription expiration date
+        const today = new Date();
+        const newExpirationDate = new Date(store.subscriptionExpiresOn || today);
+        newExpirationDate.setMonth(newExpirationDate.getMonth() + store.chosenSubscriptionPlan.duration);
+
+        // Update store
+        store.subscriptionExpiresOn = newExpirationDate;
+        await store.save();
+
+        res.status(200).json({
+            status: true,
+            message: 'Subscription renewed successfully',
+            subscriptionExpiresOn: store.subscriptionExpiresOn,
+        });
+    } catch (error) {
+        console.error('Error renewing subscription:', error);
+        res.status(500).json({
+            status: false,
+            message: 'Internal server error',
+            error: error.message,
+        });
+    }
+};
+
+// Controller Method to Get Store Category
+exports.getStoreCategory = async (req, res) => {
+    try {//req.user._id;
+
+        const storeId = req.params.storeId || req.user._id;
+        // Validate store ID
+        if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: "Invalid store ID" });
+        }
+
+        // Fetch the store and populate the 'category' field
+        const store = await storeModel.findById(storeId).populate('category', 'name');
+
+        if (!store) {
+            return res.status(404).json({ status: false, message: "Store not found" });
+        }
+
+        if (!store.category) {
+            return res.status(404).json({ status: false, message: "Store category not set" });
+        }
+
+        // Respond with the category name
+        res.status(200).json({
+            status: true,
+            category: store.category.name, // You can return more details if needed
+        });
+
+    } catch (error) {
+        console.error("Error fetching store category:", error);
+        res.status(500).json({ status: false, message: "Internal server error", error: error.message });
+    }
+};
+
+exports.getIfSpecialOrdersAllowed = async (req, res) => {
+    try {
+        // Assuming the authenticated user's store ID is in req.user.storeId
+        const storeId = req.user._id;
+
+        if (!storeId) {
+            return res.status(400).json({ message: "Store ID is required." });
+        }
+
+        // Find the store by ID
+        const store = await storeModel.findById(storeId);
+
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({ allowSpecialOrders: store.allowSpecialOrders });
+    } catch (error) {
+        console.error("Error fetching special orders status:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+/**
+ * Update if special orders are allowed for a store.
+ */
+exports.updateIfAllowSpecialOrder = async (req, res) => {
+    try {
+        // Assuming the authenticated user's store ID is in req.user.storeId
+        const storeId = req.user._id;
+
+        if (!storeId) {
+            return res.status(400).json({ message: "Store ID is required." });
+        }
+
+        // Validate the request body
+        const { allowSpecialOrders } = req.body;
+
+        if (typeof allowSpecialOrders !== "boolean") {
+            return res.status(400).json({ message: "Invalid input. 'allowSpecialOrders' must be a boolean." });
+        }
+
+        // Update the store's allowSpecialOrders field
+        const store = await storeModel.findByIdAndUpdate(
+            storeId,
+            { allowSpecialOrders },
+            { new: true } // Return the updated document
+        );
+
+        if (!store) {
+            return res.status(404).json({ message: "Store not found." });
+        }
+
+        res.status(200).json({
+            message: "Special orders status updated successfully.",
+            allowSpecialOrders: store.allowSpecialOrders,
+        });
+    } catch (error) {
+        console.error("Error updating special orders status:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+exports.getShekelPerPoint = async (req, res) => {
+    try {
+        const storeId = req.query.storeId || req.user._id; // Default to user ID from the token if not provided
+        const store = await StoreModel.findById(storeId).select('shekelPerPoint');
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+        res.status(200).json({ success: true, shekelPerPoint: store.shekelPerPoint });
+    } catch (error) {
+        console.error('Error fetching shekel per point:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch shekel per point' });
+    }
+};
+
+// Update shekel per point
+exports.updateShekelPerPoint = async (req, res) => {
+    const { shekelPerPoint } = req.body;
+    const storeId = req.user._id; // Assuming storeId is available in the token
+
+    try {
+        console.log('in update shekel point')
+        if (typeof shekelPerPoint !== 'number' || shekelPerPoint <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid shekel per point value' });
+        }
+
+        const store = await StoreModel.findById(storeId);
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+
+        store.shekelPerPoint = shekelPerPoint;
+        await store.save();
+        res.status(200).json({ success: true, message: 'Shekel per point updated successfully' });
+    } catch (error) {
+        console.error('Error updating shekel per point:', error);
+        res.status(500).json({ success: false, message: 'Failed to update shekel per point' });
+    }
+};
