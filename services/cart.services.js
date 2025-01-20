@@ -131,10 +131,12 @@ class CartServices {
             }
 
             // Update the quantity or remove the item if quantity is zero
-            if (quantity > 0) {
+            if (quantity > 1) {
                 item.quantity = quantity;
                 item.totalPriceWithQuantity = item.quantity * item.pricePerUnitWithOptionsCost; // Recalculate total price for the item
             } else {
+                console.log(`item : ${cart.items}`);
+
                 // Remove the specific item from the cart
                 cart.items = cart.items.filter(
                     (item) =>

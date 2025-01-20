@@ -136,7 +136,7 @@ class OrderServices {
     // Update item status for specific store
     static async updateItemStatus(orderId, storeId, newStatus) {
         try {
-            const order = await OrderModel.findById(orderId);
+            let order = await OrderModel.findById(orderId).populate('userId');
             console.log(`newStatus ${newStatus}`);
             if (!order) {
                 throw new Error('Order not found');

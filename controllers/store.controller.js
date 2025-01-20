@@ -472,9 +472,9 @@ exports.renewSubscription = async (req, res) => {
 
 // Controller Method to Get Store Category
 exports.getStoreCategory = async (req, res) => {
-    try {
-        const { storeId } = req.params; // Store ID passed as a URL parameter
+    try {//req.user._id;
 
+        const storeId = req.params.storeId || req.user._id;
         // Validate store ID
         if (!storeId || !mongoose.Types.ObjectId.isValid(storeId)) {
             return res.status(400).json({ status: false, message: "Invalid store ID" });
@@ -568,7 +568,7 @@ exports.updateIfAllowSpecialOrder = async (req, res) => {
 
 exports.getShekelPerPoint = async (req, res) => {
     try {
-        const storeId = req.user._id; // Assuming storeId is available in the token
+        const storeId = req.query.storeId || req.user._id; // Default to user ID from the token if not provided
         const store = await StoreModel.findById(storeId).select('shekelPerPoint');
         if (!store) {
             return res.status(404).json({ success: false, message: 'Store not found' });

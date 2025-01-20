@@ -1,6 +1,7 @@
 //user.controller.js
 const UserServices = require('../services/user.services.js');
 const StoreServices = require('../services/store.services.js');
+const StoreModel = require('../model/store.model.js'); // Import your Store model
 
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
@@ -491,8 +492,9 @@ exports.storesOfFavCategories = async (req, res) => {
     }
 };
 ///////////////////////point system///////////////////////
+
 exports.addPoints = async (req, res) => {
-    const { storeId, storeName, points } = req.body;
+    const { storeId, points } = req.body; // Only receiving storeId and points
     const userId = req.user._id;
 
     try {
@@ -501,6 +503,14 @@ exports.addPoints = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+
+        // Fetch store details to get the storeName
+        const store = await StoreModel.findById(storeId);
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+
+        const storeName = store.storeName; // Retrieve storeName
 
         // Check if the store already exists in the user's points
         if (user.points.has(storeId)) {
@@ -512,50 +522,116 @@ exports.addPoints = async (req, res) => {
 
         await user.save();
 
-        res.status(200).json({ success: true, message: 'Points added successfully', points: user.points });
+        res.status(200).json({ 
+            success: true, 
+            message: 'Points added successfully', 
+            points: user.points 
+        });
     } catch (error) {
         console.error('Error adding points:', error);
         res.status(500).json({ success: false, message: 'Failed to add points' });
     }
 };
 
+
 // Remove points from a user's account for a specific store
 exports.removePoints = async (req, res) => {
-    const { storeId, points } = req.body;
+    const { storeId, points } = req.body; // Extract storeId and points from request
     const userId = req.user._id;
 
     try {
+        // Fetch the user
         const user = await UserModel.findById(userId);
 
-        if (!user || !user.points.has(storeId)) {
-            return res.status(404).json({ success: false, message: 'Store points not found for user' });
+        if (!user) {
+            console.log(`[DEBUG] User not found for ID: ${userId}`);
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Check if the store exists in the user's points map
+        if (!user.points || !user.points.has(storeId)) {
+            console.log(`[DEBUG] No points found for store with ID: ${storeId}`);
+            return res.status(404).json({
+                success: false,
+                message: `No points found for store with ID ${storeId}`,
+            });
+        }
+
+        // Retrieve current points for the store
+        const storeData = user.points.get(storeId);
+        const currentPoints = storeData.totalPoints || 0;
+
+        console.log(`[DEBUG] Current points for store ${storeId}: ${currentPoints}`);
+
+        if (points > currentPoints) {
+            console.log(
+                `[DEBUG] Insufficient points to deduct. Requested: ${points}, Available: ${currentPoints}`
+            );
+            return res.status(400).json({
+                success: false,
+                message: `Insufficient points to deduct. Current points: ${currentPoints}`,
+            });
         }
 
         // Deduct points, ensuring they don't go below zero
-        const currentPoints = user.points.get(storeId).totalPoints;
-        user.points.get(storeId).totalPoints = Math.max(0, currentPoints - points);
+        const updatedPoints = Math.max(0, currentPoints - points);
+        console.log(`[DEBUG] Updated points for store ${storeId}: ${updatedPoints}`);
+        storeData.totalPoints = updatedPoints;
 
+        // If points reach zero, consider removing the entry entirely
+        if (updatedPoints === 0) {
+            //console.log(`[DEBUG] Removing store ${storeId} from user points map as points reached zero.`);
+            //user.points.delete(storeId);
+        }
+
+        // Save the updated user document
         await user.save();
 
-        res.status(200).json({ success: true, message: 'Points removed successfully', points: user.points });
+        console.log(`[DEBUG] Successfully updated points for user ${userId}`);
+        res.status(200).json({
+            success: true,
+            message: `Points removed successfully from store ID ${storeId}`,
+            points: user.points,
+        });
     } catch (error) {
-        console.error('Error removing points:', error);
+        console.error(`[DEBUG] Error removing points: ${error.message}`);
         res.status(500).json({ success: false, message: 'Failed to remove points' });
     }
 };
+
 
 // Get all points for the user
 exports.getAllPoints = async (req, res) => {
     const userId = req.user._id;
 
     try {
+        // Find the user
         const user = await UserModel.findById(userId);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.status(200).json({ success: true, points: user.points });
+        // Populate the store information (e.g., logo, name)
+        const pointsWithStoreInfo = await Promise.all(
+            Array.from(user.points.entries()).map(async ([storeId, pointData]) => {
+                const store = await StoreModel.findById(storeId).select('storeName logo');
+                if (!store) {
+                    return null; // Skip if the store doesn't exist
+                }
+                return {
+                    storeId,
+                    storeName: store.storeName,
+                    logo: store.logo, // Include the store's logo URL
+                    totalPoints: pointData.totalPoints,
+                };
+            })
+        );
+
+        // Filter out any null entries (if stores are missing)
+        const filteredPoints = pointsWithStoreInfo.filter((entry) => entry !== null);
+
+        res.status(200).json({ success: true, points: filteredPoints });
     } catch (error) {
         console.error('Error fetching points:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch points' });

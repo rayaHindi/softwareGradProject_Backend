@@ -27,6 +27,7 @@ router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
 router.get('/getAllStores', StoreController.getAllStores);
 router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken, StoreController.checkIfAllowSpecialOrders);
 router.get('/getStoreCategory/:storeId',authenticateToken, StoreController.getStoreCategory);
+router.get('/getStoreCategory',authenticateToken, StoreController.getStoreCategory);
 
 
 router.post('/rateStore', authenticateToken, StoreController.rateStore);
