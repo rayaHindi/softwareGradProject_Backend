@@ -11,7 +11,7 @@ const SaleSchema = new mongoose.Schema({
     saleType: {
         type: String,
         enum: ['Percentage Discount', 'BOGO', 'Flat Discount'],
-        required: true,
+        required: false,
     },
     saleAmount: {
         type: Number,

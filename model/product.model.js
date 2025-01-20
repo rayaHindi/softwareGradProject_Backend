@@ -17,11 +17,31 @@ const productSchema = new Schema({
         type: Number,
         required: [true, "Product price is required"],
         min: [0, "Price cannot be negative"],
+        get: function (value) {
+            // Check if the product is on sale and return salePrice if applicable
+            if (this.onSale && this.salePrice != null && this.salePrice > 0) {
+                return this.salePrice;
+            }
+            return value; // Return the original price
+        }
     },
     salePrice: {
         type: Number,
         required: false,
         min: [0, "Price cannot be negative"],
+    },
+    oldPrice: {
+        type: Number,
+        required: false,
+        min: [0, "Price cannot be negative"],
+    },
+    saleAmount: {
+        type: Number,
+        required: false,
+    },
+    endDate: {
+        type: Date,
+        required: false,
     },
     image: {
         type: String, // URL of the photo

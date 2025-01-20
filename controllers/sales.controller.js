@@ -34,23 +34,32 @@ exports.createSale = async (req, res) => {
                 console.log(`Product ${productId} not found, skipping.`);
                 continue;
             }
+            console.log(product.price); // Automatically returns salePrice if on sale
 
-            // Calculate the sale price using the formula: salePrice = saleAmount * product price
-            const salePrice = (saleAmount / 100) * product.price; // saleAmount is a percentage
+            if (product.inStock == true) {
+                // Calculate the sale price using the formula: salePrice = saleAmount * product price
+                salePrice = (saleAmount / 100) * product.price; // saleAmount is a percentage
+                salePrice = product.price - salePrice;
+                const updateData = {
+                    onSale: true,
+                    salePrice: salePrice, // Calculate and update sale price
+                    saleAmount: saleAmount,
+                    endDate: endDate,
+                    oldPrice: product.price,
+                    price: salePrice,
+                };
 
-            const updateData = {
-                onSale: true,
-                salePrice: salePrice, // Calculate and update sale price
-            };
+                try {
+                    // Call the updateProduct method (make sure to include store validation)
+                    const updatedProduct = await ProductServices.updateProductById(productId, updateData);
+                    updateResults.push(updatedProduct);
+                    console.log(`Product ${productId} updated successfully.`);
+                } catch (error) {
+                    console.error(`Error updating product ${productId}:`, error.message);
+                }
 
-            try {
-                // Call the updateProduct method (make sure to include store validation)
-                const updatedProduct = await ProductServices.updateProductById(productId, updateData);
-                updateResults.push(updatedProduct);
-                console.log(`Product ${productId} updated successfully.`);
-            } catch (error) {
-                console.error(`Error updating product ${productId}:`, error.message);
             }
+
         }
 
         // Return success response with the sale details and product update results
