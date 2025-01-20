@@ -66,6 +66,14 @@ const userSchema = new Schema({
         default: 0, // Start with 0 orders
         required: true
     },
+    points: {
+        type: Map, // A map where the key is the storeId
+        of: new Schema({
+            storeName: { type: String, required: true }, // Store name for easy display
+            totalPoints: { type: Number, default: 0 },  // Points earned at the store
+        }),
+        default: {}, // Initialize as an empty object
+    },
 
 }, { timestamps: true });
 

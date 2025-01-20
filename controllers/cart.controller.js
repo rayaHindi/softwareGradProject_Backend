@@ -37,9 +37,10 @@ exports.getCart = async (req, res) => {
 
 exports.updateCartItem = async (req, res) => {
     try {
-        const { productId, quantity,selectedOptions } = req.body;
+        const { productId, quantity, selectedOptions } = req.body;
         const userId = req.user._id; // Extracted from middleware
-
+        console.log('recieved in updateCartItem');
+        console.log(req.body)
         // Call the service function
         const updatedCart = await CartServices.updateCartItem(userId, productId, quantity, selectedOptions);
 

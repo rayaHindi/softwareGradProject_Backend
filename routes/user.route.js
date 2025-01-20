@@ -32,5 +32,12 @@ router.delete('/wishlist/:productId', authenticateToken, UserController.removeFr
 router.get("/wishlist/checkIfExist/:productId", authenticateToken, UserController.checkIfInWishlist);
 router.get("/wishlist/getList", authenticateToken, UserController.getWishList);
 
+
+router.post('/addPoints', authenticateToken, UserController.addPoints);
+router.patch('/removePoints', authenticateToken, UserController.removePoints);
+router.get('/getAllPoints', authenticateToken, UserController.getAllPoints);
+router.get('/getPointsForStore/:storeId', authenticateToken, UserController.getPointsForStore);
+
+
 router.get("/getFullName", UserController.getFullName);
 module.exports = router;

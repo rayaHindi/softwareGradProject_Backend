@@ -24,9 +24,22 @@ router.post('/UpdateDelivery-cities', authenticateToken, StoreController.updateD
 
 router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
 
-router.get('/getAllStores',StoreController.getAllStores);
-router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken,StoreController.checkIfAllowSpecialOrders);
+router.get('/getAllStores', StoreController.getAllStores);
+router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken, StoreController.checkIfAllowSpecialOrders);
+router.get('/getStoreCategory/:storeId',authenticateToken, StoreController.getStoreCategory);
+router.get('/getStoreCategory',authenticateToken, StoreController.getStoreCategory);
+
 
 router.post('/rateStore', authenticateToken, StoreController.rateStore);
+router.post("/chooseSubscription", authenticateToken, StoreController.chooseSubscription);
+router.get('/getSubscriptionDetails', authenticateToken, StoreController.getSubscriptionDetails);
+router.post('/renew-subscription', authenticateToken, StoreController.renewSubscription);
+
+router.get('/getIfSpecialOrdersAllowed', authenticateToken, StoreController.getIfSpecialOrdersAllowed);
+router.patch('/updateIfAllowSpecialOrder', authenticateToken, StoreController.updateIfAllowSpecialOrder);
+
+// Route to update shekel per point
+router.get('/getShekelPerPoint', authenticateToken, StoreController.getShekelPerPoint);
+router.patch('/updateShekelPerPoint', authenticateToken, StoreController.updateShekelPerPoint);
 
 module.exports = router;
