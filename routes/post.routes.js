@@ -8,6 +8,8 @@ router.post('/userCreate', authenticateToken, postController.createPost);
 router.post('/storeCreate', authenticateToken, postController.createStorePost);
 //route to fetch specific posts
 router.get('/fetchAccountPosts/:userID', postController.getAccountPosts);
+router.get('/fetchStorePosts/:storeID', postController.getStorePosts);
+
 // Optional route to fetch all posts
 router.get('', postController.getAllPosts);
 

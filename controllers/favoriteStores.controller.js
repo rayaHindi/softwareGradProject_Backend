@@ -38,14 +38,20 @@ exports.removeFavoriteStore = async (req, res) => {
 exports.getFavoriteStores = async (req, res) => {
     try {
         const userId = req.user._id; // Assume user ID is extracted from the token
+        // Adjust the service function to return only storeId
         const favorites = await FavoriteStoreServices.getFavoriteStoresByUser(userId);
 
-        res.status(200).json({ success: true, data: favorites });
+        // Map over the favorites and return only storeId
+        const storeIds = favorites.map(favorite => favorite.storeId);
+        console.log('inside favorite stores fetch');
+        console.log(storeIds);
+        res.status(200).json({ success: true, data: storeIds });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
 
 exports.checkIfFavorite = async (req, res) => {
     try {

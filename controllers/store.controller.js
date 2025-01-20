@@ -327,6 +327,13 @@ exports.rateStore = async (req, res) => {
     }
 };
 
+exports.getStoreName = async (req, res) => {
+    const id = req.params.storeID;
+    console.log("store id:");
+    console.log(id);
+
+
+}
 exports.chooseSubscription = async (req, res) => {
     try {
         const storeId = req.user._id; // Extract the store ID from the authenticated user
