@@ -38,7 +38,7 @@ const specialOrderSchema = new Schema({
             photoUrl: { type: String }, // URL of the uploaded photo
             totalPrice: {
                 type: Number, // Total price for this item (base + extra costs)
-                required: true,
+                required: false,
             },
         },
     ],
@@ -49,7 +49,7 @@ const specialOrderSchema = new Schema({
     },
     totalPrice: {
         type: Number, // Total price for the whole order
-        required: true,
+        required: false,
         default: 0,
     },
     estimatedPrice: {
@@ -65,15 +65,15 @@ const specialOrderSchema = new Schema({
         default: false, // Default to unread
     },
     deliveryDetails: {
-        city: { type: String, required: true },
-        street: { type: String, required: true },
-        contactNumber: { type: String, required: true },
+        city: { type: String, required: false },
+        street: { type: String, required: false },
+        contactNumber: { type: String, required: false },
     },
     paymentDetails: {
         method: {
             type: String,
             enum: ['Cash on Delivery', 'Visa', 'Apple Pay'],
-            required: true,
+            required: false,
         },
         cardNumber: {
             type: String,

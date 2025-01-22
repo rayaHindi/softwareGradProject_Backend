@@ -52,6 +52,7 @@ exports.createSpecialOrder = async (req, res) => {
         });
 
         const savedOrder = await newOrder.save();
+
         res.status(201).json(savedOrder);
     } catch (error) {
         console.error('Error creating Special Order:', error);

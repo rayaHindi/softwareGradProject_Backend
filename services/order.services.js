@@ -1,6 +1,57 @@
 const OrderModel = require('../model/order.model');
 const StoreModel = require('../model/store.model');
 
+function determineOrderStatus(allStatuses) {
+    // Initialize counts
+    const counts = {
+        Pending: 0,
+        Shipped: 0,
+        Delivered: 0,
+    };
+
+    // Count each status occurrence
+    allStatuses.forEach(status => {
+        if (counts.hasOwnProperty(status)) {
+            counts[status]++;
+        }
+    });
+
+    const totalItems = allStatuses.length;
+
+    // All items are Pending
+    if (counts.Pending === totalItems) {
+        return 'Pending';
+    }
+
+    // All items are Shipped
+    if (counts.Shipped === totalItems) {
+        return 'Shipped';
+    }
+
+    // All items are Delivered
+    if (counts.Delivered === totalItems) {
+        return 'Delivered';
+    }
+
+    // Some Delivered and some Pending
+    if (counts.Delivered > 0 && counts.Pending > 0 && counts.Shipped === 0) {
+        return 'Partially Delivered';
+    }
+
+    // Some Shipped and some Pending
+    if (counts.Shipped > 0 && counts.Pending > 0 && counts.Delivered === 0) {
+        return 'Partially Shipped';
+    }
+
+    // Some Shipped, some Delivered, and possibly some Pending
+    if (counts.Shipped > 0 && counts.Delivered > 0) {
+        return 'Partially Shipped';
+    }
+
+    // Default to 'Partially Shipped and Delivered' for any other combinations
+    return 'Partially Shipped';
+}
+
 class OrderServices {
 
     static async createOrder(orderData) {
@@ -168,13 +219,8 @@ class OrderServices {
             // Check overall status based on all items
             const allStatuses = order.items.map((item) => item.storeStatus);
 
-            if (allStatuses.every((status) => status === 'Shipped')) {
-                order.status = 'Shipped';
-            } else if (allStatuses.every((status) => status === 'Delivered')) {
-                order.status = 'Delivered';
-            } else {
-                order.status = 'Partially Shipped';
-            }
+            order.status = determineOrderStatus(allStatuses);
+
 
             await order.save();
             return order;
