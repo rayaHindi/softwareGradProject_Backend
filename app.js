@@ -11,14 +11,12 @@ const cityRoutes = require("./routes/city.routes");
 const favStoresRoutes = require("./routes/favoriteStores.routes");
 const advertisementRoutes = require("./routes/advertisement.routes");
 
+
 const userActivityRoutes = require('./routes/userActivity.routes');
 const searchRoutes = require('./routes/search.routes');
 const categorySuggestion = require('./routes/categorySuggestion.routes');
-const userActivityRoutes =require('./routes/userActivity.routes');
-const searchRoutes =require('./routes/search.routes');
-const categorySuggestion =require('./routes/categorySuggestion.routes');
-const subscriptionPlan =require('./routes/SubscriptionPlan.routes');
-const fcmToken =require('./routes/fcmToken.routes');
+const subscriptionPlan = require('./routes/SubscriptionPlan.routes');
+const fcmToken = require('./routes/fcmToken.routes');
 const notification = require('./routes/notification.routes');
 const specialOrder = require('./routes/specialOrder.routes');
 const storeSpecialOrderOption = require('./routes/storeSpecialOrderOption.routes');
@@ -44,10 +42,10 @@ app.use(cors(/*{
 
 
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    console.log('Body:', req.body);
-    next();
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
 });
 app.use("/product", productRoute);
 app.use("/", UserRoute);
@@ -61,7 +59,7 @@ app.use("/advertisement", advertisementRoutes);
 app.use("/userActivity", userActivityRoutes);
 app.use("/search", searchRoutes);
 app.use("/categorySuggestion", categorySuggestion);
-app.use("/subscriptionPlan",subscriptionPlan);
+app.use("/subscriptionPlan", subscriptionPlan);
 app.use('/posts', PostRoutes);
 app.use('/fetchAllPosts', getAllPosts);
 //app.use("/",ToDoRoute);

@@ -3,7 +3,7 @@ const FCMToken = require('../model/fcmToken.model');
 // Save or update FCM token
 exports.saveToken = async (req, res) => {
     try {
-        const { fcmToken , userType} = req.body;
+        const { fcmToken, userType } = req.body;
 
         console.log(`fcmToken: ${fcmToken},  userType= ${userType}`);
 

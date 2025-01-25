@@ -15,6 +15,7 @@ router.post('/rateProduct', authenticateToken, ProductController.rateProduct);
 
 router.post('/saleUpdate', ProductController.updateProductsBatch);
 
+//router.get('/:storeId/insights', ProductController.getStoreInsights);
 
 /*
 router.get('/products', productController.getAllProductsController);
