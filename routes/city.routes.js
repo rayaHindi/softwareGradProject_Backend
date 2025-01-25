@@ -7,6 +7,7 @@ router.post('/add', CityController.addCity);
 
 // Get all cities
 router.get('/getAll', CityController.getAllCities);
+router.get('/statistics', CityController.getCityStatistics);
 
 // Increment store count
 //router.put('/:cityId/increment', CityController.incrementStoreCount);

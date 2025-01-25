@@ -1,7 +1,7 @@
 const CategorySuggestionServices = require('../services/categorySuggestion.services');
 exports.submitSuggestion = async (req, res) => {
     const { categoryName, description, userType } = req.body;
-    const userId = req.user._id;
+    const userId = req.user ? req.user._id : null; // Check if user exists
 
     try {
         if (!categoryName) {

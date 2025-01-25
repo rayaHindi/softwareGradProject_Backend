@@ -13,7 +13,8 @@ exports.saveToken = async (req, res) => {
         }
 
         // Determine userType from the authenticated request
-        const userId = userType === 'user' ? req.user._id : null;
+        const userId = (userType === 'user' ||userType === 'admin') ? req.user._id : null;
+
         const storeId = userType === 'store' ? req.user._id : null;
 
         if (!userId && !storeId) {

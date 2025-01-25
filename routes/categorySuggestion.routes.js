@@ -5,6 +5,8 @@ const authenticateToken = require('../middleware/authMiddleware');
 
 // Routes
 router.post('/submitNewSuggestion', authenticateToken, CategorySuggestionController.submitSuggestion);
+router.post('/submitNewSuggestionByStore', CategorySuggestionController.submitSuggestion);
+
 router.get('/getAllSuggestions', authenticateToken, CategorySuggestionController.getSuggestions);
 router.patch('/updateSuggestionStatus/:suggestionId', authenticateToken, CategorySuggestionController.updateSuggestionStatus);
 

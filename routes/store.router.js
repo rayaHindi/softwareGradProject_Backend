@@ -42,4 +42,6 @@ router.patch('/updateIfAllowSpecialOrder', authenticateToken, StoreController.up
 router.get('/getShekelPerPoint', authenticateToken, StoreController.getShekelPerPoint);
 router.patch('/updateShekelPerPoint', authenticateToken, StoreController.updateShekelPerPoint);
 
+router.get('/getMostRatedStore', StoreController.getMostRatedStore);
+
 module.exports = router;
