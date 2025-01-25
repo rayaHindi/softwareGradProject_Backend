@@ -7,6 +7,8 @@ const categoryService = require('../services/category.services');
 const cityService = require('../services/city.services');
 const StoreModel = require('../model/store.model');
 const SubscriptionPlan = require('../model/SubscriptionPlan.model');
+const ProductModel = require("../model/product.model");
+
 exports.register = async (req, res) => {
     try {
         const {
@@ -612,6 +614,116 @@ exports.updateShekelPerPoint = async (req, res) => {
     }
 };
 
+
+// Controller to fetch store insights
+/*exports.getStoreInsights = async (req, res) => {
+    const { id } = req.params; // Store ID from URL
+
+    try {
+        // Fetch the store from the database
+        const store = await StoreModel.findById(id).select('storeName rating numberOfReceivedOrders');
+
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+
+        // Structure the response
+        const insights = {
+            storeName: store.storeName,
+            rating: {
+                average: store.rating.average,
+                total: store.rating.total,
+                count: store.rating.count,
+            },
+            numberOfReceivedOrders: store.numberOfReceivedOrders,
+        };
+        console.log(insights);
+        return res.status(200).json({ success: true, data: insights });
+    } catch (error) {
+        console.error('Error fetching store insights:', error.message);
+        return res.status(500).json({ success: false, message: 'Server error' });
+    }
+};*/
+
+
+
+exports.getStoreInsights = async (req, res) => {
+    const { id } = req.params; // Store ID from URL
+
+    try {
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid store ID' });
+        }
+
+        // Fetch the store from the database
+        const store = await StoreModel.findById(id).select('storeName rating numberOfReceivedOrders');
+        if (!store) {
+            return res.status(404).json({ success: false, message: 'Store not found' });
+        }
+
+        // Fetch products for the store
+        const products = await ProductModel.find({ store: id }).lean();
+
+        // Find most searched and most ordered products if any products exist
+        let mostSearchedProduct = null;
+        let mostOrderedProduct = null;
+
+        if (products.length > 0) {
+            mostSearchedProduct = products.reduce((max, product) =>
+                product.searchCount > (max?.searchCount || 0) ? product : max, null);
+
+            mostOrderedProduct = products.reduce((max, product) =>
+                product.salesCount > (max?.salesCount || 0) ? product : max, null);
+        }
+
+        // Structure the response
+        const insights = {
+            storeName: store.storeName,
+            rating: {
+                average: store.rating.average,
+                total: store.rating.total,
+                count: store.rating.count,
+            },
+            numberOfReceivedOrders: store.numberOfReceivedOrders,
+            mostSearchedProduct: mostSearchedProduct
+                ? {
+                    id: mostSearchedProduct._id,
+                    name: mostSearchedProduct.name,
+                    description: mostSearchedProduct.description,
+                    price: mostSearchedProduct.price,
+                    salePrice: mostSearchedProduct.salePrice,
+                    image: mostSearchedProduct.image,
+                    category: mostSearchedProduct.category,
+                    searchCount: mostSearchedProduct.searchCount,
+                    stock: mostSearchedProduct.stock,
+                    inStock: mostSearchedProduct.inStock,
+                    rating: mostSearchedProduct.rating,
+                }
+                : null,
+            mostOrderedProduct: mostOrderedProduct
+                ? {
+                    id: mostOrderedProduct._id,
+                    name: mostOrderedProduct.name,
+                    description: mostOrderedProduct.description,
+                    price: mostOrderedProduct.price,
+                    salePrice: mostOrderedProduct.salePrice,
+                    image: mostOrderedProduct.image,
+                    category: mostOrderedProduct.category,
+                    salesCount: mostOrderedProduct.salesCount,
+                    stock: mostOrderedProduct.stock,
+                    inStock: mostOrderedProduct.inStock,
+                    rating: mostOrderedProduct.rating,
+                }
+                : null,
+        };
+        console.log(insights);
+        return res.status(200).json({ success: true, data: insights });
+    } catch (error) {
+        console.error('Error fetching store insights:', error.message);
+        return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
 exports.getMostRatedStore = async (req, res) => {
     try {
         // Find the store with the highest average rating

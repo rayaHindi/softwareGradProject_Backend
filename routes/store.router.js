@@ -26,8 +26,8 @@ router.get('/fetchProfileInfo/:storeID', StoreController.fetchProfileInfo);
 
 router.get('/getAllStores', StoreController.getAllStores);
 router.get('/checkIfAllowSpecialOrders/:storeId', authenticateToken, StoreController.checkIfAllowSpecialOrders);
-router.get('/getStoreCategory/:storeId',authenticateToken, StoreController.getStoreCategory);
-router.get('/getStoreCategory',authenticateToken, StoreController.getStoreCategory);
+router.get('/getStoreCategory/:storeId', authenticateToken, StoreController.getStoreCategory);
+router.get('/getStoreCategory', authenticateToken, StoreController.getStoreCategory);
 
 
 router.post('/rateStore', authenticateToken, StoreController.rateStore);
@@ -41,6 +41,9 @@ router.patch('/updateIfAllowSpecialOrder', authenticateToken, StoreController.up
 // Route to update shekel per point
 router.get('/getShekelPerPoint', authenticateToken, StoreController.getShekelPerPoint);
 router.patch('/updateShekelPerPoint', authenticateToken, StoreController.updateShekelPerPoint);
+
+////insights
+router.get('/:id/insights', StoreController.getStoreInsights);
 
 router.get('/getMostRatedStore', StoreController.getMostRatedStore);
 

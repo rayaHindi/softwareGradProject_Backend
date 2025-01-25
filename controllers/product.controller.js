@@ -1,5 +1,6 @@
 const ProductServices = require('../services/product.services.js');
 const StoreServices = require('../services/store.services.js'); // You may create this if needed
+const ProductModel = require("../model/product.model");
 
 const mongoose = require('mongoose');
 
@@ -313,3 +314,119 @@ exports.rateProduct = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+/*
+exports.getStoreInsights = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Get storeId from request parameters
+
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: 'Invalid store ID' });
+        }
+
+        // Fetch products for the store
+        const products = await ProductModel.find({ store: storeId });
+
+        if (!products.length) {
+            return res.status(404).json({ status: false, message: 'No products found for this store' });
+        }
+
+        // Find most searched product
+        const mostSearchedProduct = products.reduce((max, product) =>
+            product.searchCount > (max?.searchCount || 0) ? product : max, null);
+
+        // Find most ordered product
+        const mostOrderedProduct = products.reduce((max, product) =>
+            product.salesCount > (max?.salesCount || 0) ? product : max, null);
+
+        // Send the insights
+        res.status(200).json({
+            status: true,
+            message: 'Store insights fetched successfully',
+            data: {
+                mostSearchedProduct,
+                mostOrderedProduct,
+            },
+        });
+    } catch (err) {
+        console.error('Error fetching store insights:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to fetch store insights',
+            error: err.message,
+        });
+    }
+};
+*/
+/*
+exports.getStoreInsights = async (req, res) => {
+    try {
+        const { storeId } = req.params; // Get storeId from request parameters
+
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ status: false, message: 'Invalid store ID' });
+        }
+
+        // Fetch products for the store
+        const products = await ProductModel.find({ store: storeId }).lean();
+
+        if (!products.length) {
+            return res.status(404).json({ status: false, message: 'No products found for this store' });
+        }
+
+        // Find most searched product
+        const mostSearchedProduct = products.reduce((max, product) =>
+            product.searchCount > (max?.searchCount || 0) ? product : max, null);
+
+        // Find most ordered product
+        const mostOrderedProduct = products.reduce((max, product) =>
+            product.salesCount > (max?.salesCount || 0) ? product : max, null);
+
+        // Send the insights
+        res.status(200).json({
+            status: true,
+            message: 'Store insights fetched successfully',
+            data: {
+                mostSearchedProduct: mostSearchedProduct
+                    ? {
+                        id: mostSearchedProduct._id,
+                        name: mostSearchedProduct.name,
+                        description: mostSearchedProduct.description,
+                        price: mostSearchedProduct.price,
+                        salePrice: mostSearchedProduct.salePrice,
+                        image: mostSearchedProduct.image,
+                        category: mostSearchedProduct.category,
+                        searchCount: mostSearchedProduct.searchCount,
+                        stock: mostSearchedProduct.stock,
+                        inStock: mostSearchedProduct.inStock,
+                        rating: mostSearchedProduct.rating,
+                    }
+                    : null,
+                mostOrderedProduct: mostOrderedProduct
+                    ? {
+                        id: mostOrderedProduct._id,
+                        name: mostOrderedProduct.name,
+                        description: mostOrderedProduct.description,
+                        price: mostOrderedProduct.price,
+                        salePrice: mostOrderedProduct.salePrice,
+                        image: mostOrderedProduct.image,
+                        category: mostOrderedProduct.category,
+                        salesCount: mostOrderedProduct.salesCount,
+                        stock: mostOrderedProduct.stock,
+                        inStock: mostOrderedProduct.inStock,
+                        rating: mostSearchedProduct.rating,
+
+                    }
+                    : null,
+            },
+        });
+    } catch (err) {
+        console.error('Error fetching store insights:', err);
+        res.status(500).json({
+            status: false,
+            message: 'Failed to fetch store insights',
+            error: err.message,
+        });
+    }
+};
+*/
