@@ -97,6 +97,7 @@ const orderSchema = new Schema({
             //'In Progress',
             'Shipped',
             //'Out for Delivery',
+            'Partially Delivered',
             'Delivered',
             //'Cancelled',
             //'Failed',

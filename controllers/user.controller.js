@@ -6,6 +6,7 @@ const StoreModel = require('../model/store.model.js'); // Import your Store mode
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 const UserModel = require('../model/user.model.js');
+
 require('dotenv').config(); // Load environment variables
 
 
@@ -26,7 +27,11 @@ exports.register = async (req, res, next) => {
         });
 
         // Generate token
-        const tokenData = { _id: newUser._id, email: newUser.email, userType: 'user' };
+        const tokenData = {
+            _id: newUser._id,
+            email: newUser.email,
+            userType: accountType === 'A' ? 'admin' : 'user'
+        };
         const token = jwt.sign(tokenData, "secret", { expiresIn: '1h' });
 
         // Respond with success message, token, and user data
@@ -522,10 +527,10 @@ exports.addPoints = async (req, res) => {
 
         await user.save();
 
-        res.status(200).json({ 
-            success: true, 
-            message: 'Points added successfully', 
-            points: user.points 
+        res.status(200).json({
+            success: true,
+            message: 'Points added successfully',
+            points: user.points
         });
     } catch (error) {
         console.error('Error adding points:', error);
@@ -654,5 +659,115 @@ exports.getPointsForStore = async (req, res) => {
     } catch (error) {
         console.error('Error fetching points for store:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch points for store' });
+    }
+};
+
+exports.getUserEmail = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Find the user by their ID in the database
+        const user = await UserModel.findById(userId).select('email'); // Only fetch the email field
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Return the email
+        res.status(200).json({
+            success: true,
+            email: user.email,
+        });
+    } catch (error) {
+        console.error("Error fetching user email:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user email",
+            error: error.message,
+        });
+    }
+};
+
+exports.getAdmins = async (req, res) => {
+    try {
+        // Fetch all admins except the main admin
+        const admins = await UserModel.find({
+            accountType: "A",
+            email: { $ne: "Admin@gmail.com" } // Exclude main admin
+        }).select("_id firstName lastName email phoneNumber"); // Fetch required fields only
+
+        res.status(200).json({
+            success: true,
+            data: admins
+        });
+    } catch (error) {
+        console.error("Error fetching admins:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch admins",
+            error: error.message
+        });
+    }
+};
+
+exports.deleteAdmin = async (req, res) => {
+    try {
+        const adminId = req.params.adminId;
+
+        // Check if the admin being deleted is the main admin
+        const admin = await UserModel.findById(adminId);
+        if (!admin || admin.email === "Admin@gmail.com") {
+            return res.status(403).json({
+                success: false,
+                message: "Cannot delete main admin"
+            });
+        }
+
+        // Delete the admin
+        await UserModel.findByIdAndDelete(adminId);
+
+        res.status(200).json({
+            success: true,
+            message: "Admin deleted successfully"
+        });
+    } catch (error) {
+        console.error("Error deleting admin:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete admin",
+            error: error.message
+        });
+    }
+};
+
+exports.getStatistics = async (req, res) => {
+    try {
+        // Get the user with the most orders
+        const topUser = await UserModel.findOne({ accountType: 'U' })
+            .sort({ numberOfOrders: -1 })
+            .select('firstName lastName email numberOfOrders phoneNumber')
+            .lean();
+
+        // Count total users with accountType 'U'
+        const totalUsers = await UserModel.countDocuments({ accountType: 'U' });
+
+        // Count total stores
+        const totalStores = await StoreModel.countDocuments();
+
+        // Send the response
+        res.status(200).json({
+            success: true,
+            data: {
+                topUser: topUser || null, // Return null if no user found
+                totalUsers,
+                totalStores,
+            },
+        });
+    } catch (err) {
+        console.error('Error fetching statistics:', err.message);
+        res.status(500).json({ success: false, message: 'Error fetching statistics' });
     }
 };

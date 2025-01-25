@@ -11,9 +11,7 @@ const cityRoutes = require("./routes/city.routes");
 const favStoresRoutes = require("./routes/favoriteStores.routes");
 const advertisementRoutes = require("./routes/advertisement.routes");
 
-const userActivityRoutes = require('./routes/userActivity.routes');
-const searchRoutes = require('./routes/search.routes');
-const categorySuggestion = require('./routes/categorySuggestion.routes');
+
 const userActivityRoutes =require('./routes/userActivity.routes');
 const searchRoutes =require('./routes/search.routes');
 const categorySuggestion =require('./routes/categorySuggestion.routes');
