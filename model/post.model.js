@@ -19,6 +19,7 @@ const PostSchema = new Schema({
     upvotes: { type: Number, default: 0 }, // Number of upvotes
     downvotes: { type: Number, default: 0 }, // Add downvotes field
     comments: { type: [CommentSchema], default: [] }, // Array of comments
+    profileImageUrl: { type: String, required: false },
     store_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'store',

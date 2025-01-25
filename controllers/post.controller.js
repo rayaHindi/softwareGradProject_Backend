@@ -4,7 +4,7 @@ const Post = require('../model/post.model');
 exports.createPost = async (req, res) => {
     try {
         console.log("im inside user post creation");
-        const { firstName, lastName, email, content, images, store_id } = req.body;
+        const { firstName, lastName, email, content, images, store_id, profileImageUrl } = req.body;
         const user_id = req.user._id;
         console.log("this is the store id:");
         console.log(store_id);
@@ -28,6 +28,7 @@ exports.createPost = async (req, res) => {
             post_type,
             store_id,
             user_id,
+            profileImageUrl,
         });
 
         await newPost.save();
@@ -48,7 +49,7 @@ exports.createPost = async (req, res) => {
 exports.createStorePost = async (req, res) => {
     try {
         console.log("im inside store post creation");
-        const { fullName, email, content, images } = req.body;
+        const { fullName, email, content, images, profileImageUrl } = req.body;
         const store_id = req.user._id;
 
         // Validate input
@@ -71,6 +72,7 @@ exports.createStorePost = async (req, res) => {
             images, // Include the images array
             post_type,
             store_id,
+            profileImageUrl,
         });
 
         await newPost.save();
@@ -185,7 +187,7 @@ exports.getAllPosts = async (req, res) => {
         console.log("im inside the fetch");
         const posts = await Post.find().sort({ createdAt: -1 });
         res.status(200).json(posts);
-        console.log("success");
+        console.log(posts);
     } catch (error) {
         console.log("failure");
         console.error("Error fetching posts:", error);
