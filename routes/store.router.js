@@ -45,5 +45,6 @@ router.patch('/updateShekelPerPoint', authenticateToken, StoreController.updateS
 ////insights
 router.get('/:id/insights', StoreController.getStoreInsights);
 
+router.get('/getMostRatedStore', StoreController.getMostRatedStore);
 
 module.exports = router;

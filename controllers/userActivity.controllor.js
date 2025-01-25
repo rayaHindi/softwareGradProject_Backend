@@ -79,7 +79,13 @@ exports.getRecentlyViewedProducts = async (req, res) => {
         const userActivity = await UserActivityModel.findOne({ userId })
             .populate({
                 path: 'lastVisitedProducts.productId',
-                match: { inStock: true }, // Include only in-stock products
+                match: {
+                    $or: [
+                        { inStock: true },
+                        { isUponOrder: true }
+                    ]
+                },
+                // Include only in-stock products
                 populate: {
                     path: 'store',
                     select: 'storeName logo',
@@ -98,7 +104,7 @@ exports.getRecentlyViewedProducts = async (req, res) => {
                 ...item.productId._doc,
                 visitedAt: item.visitedAt,
             }));
-
+        console.log(`recently vied ${recentlyViewedProducts} `);
         res.status(200).json({ success: true, products: recentlyViewedProducts });
     } catch (error) {
         console.error('Error fetching recently viewed products:', error);

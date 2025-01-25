@@ -40,4 +40,12 @@ router.get('/getPointsForStore/:storeId', authenticateToken, UserController.getP
 
 
 router.get("/getFullName", UserController.getFullName);
+
+router.get('/getUserEmail', authenticateToken, UserController.getUserEmail);
+
+router.get("/getAdmins", authenticateToken, UserController.getAdmins);
+router.delete("/deleteAdmin/:adminId", authenticateToken, UserController.deleteAdmin);
+
+router.get("/getStatistics", UserController.getStatistics);
+
 module.exports = router;

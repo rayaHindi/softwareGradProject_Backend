@@ -724,3 +724,31 @@ exports.getStoreInsights = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
+exports.getMostRatedStore = async (req, res) => {
+    try {
+        // Find the store with the highest average rating
+        const mostRatedStore = await StoreModel.findOne()
+            .sort({ 'rating.average': -1 }) // Sort in descending order of average rating
+            .select('storeName logo rating.average phoneNumber contactEmail numberOfReceivedOrders') // Select required fields
+            .lean(); // Convert to a plain JavaScript object
+
+        if (!mostRatedStore) {
+            return res.status(404).json({
+                success: false,
+                message: 'No stores found',
+            });
+        }
+
+        // Send the store data
+        res.status(200).json({
+            success: true,
+            data: mostRatedStore,
+        });
+    } catch (err) {
+        console.error('Error fetching most rated store:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching most rated store',
+        });
+    }
+};
