@@ -49,7 +49,7 @@ exports.createPost = async (req, res) => {
 exports.createStorePost = async (req, res) => {
     try {
         console.log("im inside store post creation");
-        const { fullName, email, content, images, profileImageUrl } = req.body;
+        const { fullName, email, content, images } = req.body;
         const store_id = req.user._id;
 
         // Validate input
@@ -63,6 +63,7 @@ exports.createStorePost = async (req, res) => {
             return res.status(400).json({ message: 'Images must be an array of URLs.' });
         }
         post_type = 'P';
+        const profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/craftblend-c388a.firebasestorage.app/o/storeLogos_images%2Flogo_1737471224067.jpg?alt=media&token=cb820ccd-863e-430c-a576-d9983b7268f4";
 
         // Create and save post for store
         const newPost = new Post({
