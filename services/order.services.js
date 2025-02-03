@@ -93,7 +93,7 @@ class OrderServices {
             const orders = await OrderModel.find({ 'items.storeId': storeId })
                 .populate('userId', 'firstName lastName email') // Populate user details
                 .populate('items.productId', 'name image'); // Populate product details
-
+console.log(orders);
             // Filter and format the orders for the given store
             const formattedOrders = orders.map((order) => {
                 const filteredItems = order.items.filter(

@@ -187,6 +187,7 @@ exports.getOrdersByStoreId = async (req, res) => {
 
     try {
         const orders = await OrderServices.getOrdersByStoreId(storeId);
+        console.log(`ordersssssssssssssssssssssssssssssss ${orders}`);
         res.status(200).json({ success: true, orders });
     } catch (error) {
         console.error('Error fetching orders by store ID:', error);
