@@ -94,7 +94,7 @@ exports.getStoreSpecialOrders = async (req, res) => {
             })),
         }));
 
-        console.log(formattedOrders); // Debugging formatted orders
+      // // console.log(formattedOrders); // Debugging formatted orders
         res.status(200).json({ specialOrders: formattedOrders });
     } catch (error) {
         console.error('Error fetching Special Orders:', error);
