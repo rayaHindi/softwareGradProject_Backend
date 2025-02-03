@@ -76,7 +76,7 @@ exports.getStoresByCategory = async (req, res) => {
 
         // Call the service to get all stores under the category
         const stores = await categoryService.getStoresByCategory(categoryId);
-
+        console.log(`categoryId ${categoryId}     stores : ${stores}`);
         // Send success response
         res.status(200).json(stores);
     } catch (error) {
