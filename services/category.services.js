@@ -19,7 +19,7 @@ class CategoryServices {
             throw new Error('Unable to add category');
         }
     }
-    
+
     // Check if a category has stores
     static async hasStores(id) {
         try {
@@ -89,7 +89,8 @@ class CategoryServices {
     static async getStoresByCategory(categoryId) {
         try {
             const category = await CategoryModel.findById(categoryId).populate('stores');
-            if (!category) {
+            console.log(`category ${category}`);
+            ; if (!category) {
                 throw new Error('Category not found');
             }
             return category.stores.map(store => ({
